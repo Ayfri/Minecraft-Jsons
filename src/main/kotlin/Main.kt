@@ -14,6 +14,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
@@ -34,14 +38,50 @@ fun App() {
 	val type = remember { mutableStateOf(TemplateType.RECIPE) }
 	
 	Row {
-		DropDown(
-			TemplateType.values().toList(),
-			type,
-			{ it.name },
-			"Type",
-		)
+		Column(
+			modifier = Modifier.drawBehind {
+				drawLine(
+					start = Offset(size.width, 0f),
+					end = Offset(size.width, size.height),
+					brush = SolidColor(Color.LightGray)
+				)
+			}.weight(0.3f).padding(end = 10.dp),
+			horizontalAlignment = Alignment.CenterHorizontally
+		) {
+			DropDown(
+				TemplateType.values().toList(),
+				type,
+				{ it.name },
+				"Type",
+			)
+			
+			if (type.value == TemplateType.RECIPE) {
+				Column(
+					modifier = Modifier.fillMaxSize().padding(top = 100.dp),
+					horizontalAlignment = Alignment.CenterHorizontally
+				) {
+					val fileName = remember { mutableStateOf("") }
+					val recipeType = remember { mutableStateOf(RecipeType.CRAFTING_SHAPED) }
+					
+					OutlinedTextField(
+						value = fileName.value,
+						label = { Text("File Name") },
+						onValueChange = { fileName.value = it },
+					)
+					
+					DropDown(
+						RecipeType.values().toList(),
+						recipeType,
+						{ it.name },
+						"Recipe Type",
+					)
+				}
+			}
+		}
 		
-		Row {
+		Row(
+			modifier = Modifier.weight(0.7f).padding(10.dp)
+		) {
 			TextField(
 				value = folder.value,
 				label = { Text("Folder") },
@@ -49,33 +89,12 @@ fun App() {
 				readOnly = true,
 				modifier = Modifier.fillMaxWidth(0.8f),
 			)
+			
 			Box(
 				modifier = Modifier.fillMaxWidth().align(Alignment.CenterVertically),
 			) {
 				ButtonFolderSelector(folder, Modifier.align(Alignment.Center))
 			}
-		}
-	}
-	
-	if (type.value == TemplateType.RECIPE) {
-		Column(
-			modifier = Modifier.fillMaxSize().padding(top = 100.dp)
-		) {
-			val fileName = remember { mutableStateOf("") }
-			val recipeType = remember { mutableStateOf(RecipeType.CRAFTING_SHAPED) }
-			
-			OutlinedTextField(
-				value = fileName.value,
-				label = { Text("File Name") },
-				onValueChange = { fileName.value = it },
-			)
-			
-			DropDown(
-				RecipeType.values().toList(),
-				recipeType,
-				{ it.name },
-				"Recipe Type",
-			)
 		}
 	}
 }

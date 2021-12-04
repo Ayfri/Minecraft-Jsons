@@ -73,8 +73,11 @@ fun <T> DropDown(
 	selection: MutableState<T>,
 	transform: (T) -> String,
 	label: String,
+	modifier: Modifier = Modifier,
 ) {
-	Column {
+	Column(
+		modifier,
+	) {
 		var expanded by remember { mutableStateOf(false) }
 		var textFieldSize by remember { mutableStateOf(Size.Zero) }
 		
