@@ -14,9 +14,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
+import androidx.compose.ui.window.rememberWindowState
 import composables.ButtonFolderSelector
 import composables.DropDown
 import templates.RecipeType
@@ -79,7 +81,8 @@ fun App() {
 }
 
 fun main() = application {
-	Window(onCloseRequest = ::exitApplication) {
+	val state = rememberWindowState(size = DpSize(1200.dp, 700.dp))
+	Window(onCloseRequest = ::exitApplication, title = "Minecraft JSON Generator", state = state, resizable = false) {
 		App()
 		frame = window.rootPane
 	}
