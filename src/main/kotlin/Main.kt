@@ -35,6 +35,7 @@ lateinit var frame: JComponent
 @Preview
 fun App() {
 	val folder = remember { mutableStateOf("") }
+	val templateName = remember { mutableStateOf("") }
 	val type = remember { mutableStateOf(TemplateType.RECIPE) }
 	
 	Row {
@@ -48,12 +49,7 @@ fun App() {
 			}.weight(0.3f).padding(end = 10.dp),
 			horizontalAlignment = Alignment.CenterHorizontally
 		) {
-			DropDown(
-				TemplateType.values().toList(),
-				type,
-				{ it.name },
-				"Type",
-			)
+			DropDown(type, "Type") { it.name }
 			
 			if (type.value == TemplateType.RECIPE) {
 				Column(
@@ -69,31 +65,47 @@ fun App() {
 						onValueChange = { fileName.value = it },
 					)
 					
-					DropDown(
-						RecipeType.values().toList(),
-						recipeType,
-						{ it.name },
-						"Recipe Type",
-					)
+					DropDown(recipeType, "Recipe Type") {
+						templateName.value = it.name
+						it.name
+					}
 				}
 			}
 		}
 		
-		Row(
-			modifier = Modifier.weight(0.7f).padding(10.dp)
+		Column(
+			modifier = Modifier.weight(0.7f)
 		) {
-			TextField(
-				value = folder.value,
-				label = { Text("Folder") },
-				onValueChange = {},
-				readOnly = true,
-				modifier = Modifier.fillMaxWidth(0.8f),
-			)
-			
-			Box(
-				modifier = Modifier.fillMaxWidth().align(Alignment.CenterVertically),
+			Row(
+				modifier = Modifier.padding(vertical = 10.dp).drawBehind {
+					drawLine(
+						start = Offset(0f, size.height + 10),
+						end = Offset(size.width, size.height + 10),
+						brush = SolidColor(Color.LightGray)
+					)
+				}.padding(horizontal = 10.dp)
 			) {
-				ButtonFolderSelector(folder, Modifier.align(Alignment.Center))
+				TextField(
+					value = folder.value,
+					label = { Text("Folder") },
+					onValueChange = {},
+					readOnly = true,
+					modifier = Modifier.fillMaxWidth(0.8f),
+				)
+				
+				Box(
+					modifier = Modifier.fillMaxWidth().align(Alignment.CenterVertically),
+				) {
+					ButtonFolderSelector(folder, Modifier.align(Alignment.Center))
+				}
+			}
+			
+			Column(
+				modifier = Modifier.fillMaxSize().padding(15.dp),
+			) {
+				Text("Values")
+				val template = RecipeType.values().find { it.name == templateName.value }?.toRecipe() ?: return@Row
+				composables.Template(template)
 			}
 		}
 	}

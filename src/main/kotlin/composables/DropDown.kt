@@ -68,12 +68,28 @@ fun DropDown(
 }
 
 @Composable
-fun <T> DropDown(
-	items: List<T>,
+inline fun <reified T : Enum<T>> DropDown(
 	selection: MutableState<T>,
-	transform: (T) -> String,
 	label: String,
 	modifier: Modifier = Modifier,
+	crossinline transform: (T) -> String = { it.name },
+) {
+	DropDown(
+		enumValues<T>().asList(),
+		selection,
+		label,
+		modifier,
+		transform,
+	)
+}
+
+@Composable
+inline fun <T> DropDown(
+	items: List<T>,
+	selection: MutableState<T>,
+	label: String,
+	modifier: Modifier = Modifier,
+	crossinline transform: (T) -> String,
 ) {
 	Column(
 		modifier,

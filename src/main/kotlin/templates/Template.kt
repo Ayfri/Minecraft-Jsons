@@ -1,14 +1,16 @@
 package templates
 
-import kotlinx.serialization.Serializable
+import androidx.compose.runtime.Composable
 
-@Serializable
-open class Template
+interface Template {
+	@Composable
+	fun Content()
+}
 
 enum class TemplateType {
 	RECIPE
 }
 
-open class FabricTemplate : Template()
-open class ForgeTemplate : Template()
-open class VanillaTemplate : Template()
+abstract class FabricTemplate : Template
+abstract class ForgeTemplate : Template
+abstract class VanillaTemplate : Template

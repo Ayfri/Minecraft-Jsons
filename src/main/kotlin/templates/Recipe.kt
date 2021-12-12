@@ -1,18 +1,50 @@
 package templates
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import composables.TemplateValue
+import composables.TemplateValueEnum
+import composables.TemplateValueList
+import composables.TemplateValueMap
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 enum class RecipeType {
 	BLASTING,
+	BLASTING_MULTI,
 	CAMPFIRE_COOKING,
+	CAMPFIRE_COOKING_MULTI,
 	CRAFTING_SHAPED,
 	CRAFTING_SHAPELESS,
-	CRAFTING_SPECIAL,
 	SMELTING,
+	SMELTING_MULTI,
 	SMITHING,
 	SMOKING,
-	STONECUTTING
+	SMOKING_MULTI,
+	STONECUTTING,
+	STONECUTTING_MULTI;
+	
+	fun toRecipe(): VanillaTemplate {
+		return when (this) {
+			BLASTING -> BlastingRecipeSingleTemplate()
+			BLASTING_MULTI -> BlastingRecipeMultiTemplate()
+			CAMPFIRE_COOKING -> CampFireRecipeSingleTemplate()
+			CAMPFIRE_COOKING_MULTI -> CampFireRecipeMultiTemplate()
+			CRAFTING_SHAPED -> CraftingShapedRecipeTemplate()
+			CRAFTING_SHAPELESS -> CraftingShapelessRecipeTemplate()
+			SMELTING -> SmeltingRecipeSingleTemplate()
+			SMELTING_MULTI -> SmeltingRecipeMultiTemplate()
+			SMITHING -> SmithingRecipeTemplate()
+			SMOKING -> SmokingRecipeSingleTemplate()
+			SMOKING_MULTI -> SmokingRecipeMultiTemplate()
+			STONECUTTING -> StoneCuttingRecipeSingleTemplate()
+			STONECUTTING_MULTI -> StoneCuttingRecipeMultiTemplate()
+		}
+	}
 }
 
 enum class SpecialRecipes {
@@ -32,59 +64,234 @@ enum class SpecialRecipes {
 }
 
 @Serializable
-abstract class RecipeTemplate(val type: RecipeType) : VanillaTemplate()
+abstract class RecipeTemplate : VanillaTemplate() {
+	val type = mutableStateOf(RecipeType.CRAFTING_SHAPELESS)
+}
 
 @Serializable
-abstract class CraftResultTemplate(val result: String, val count: Int) : VanillaTemplate()
+class CraftResultTemplate : VanillaTemplate() {
+	val result = mutableStateOf("")
+	val count = mutableStateOf(0)
+	
+	@Composable
+	override fun Content() {
+		Row {
+			TemplateValue("result", result)
+			TemplateValue("count", count)
+		}
+	}
+}
 
 abstract class CookingRecipeSingle(
-	type: RecipeType, val ingredient: ItemTemplate, val result: String, val experience: Double, @SerialName("cookingtime") val cookingTime: Int = 0,
-	val group: String? = null
-) : RecipeTemplate(type)
+	type: RecipeType,
+) : RecipeTemplate() {
+	@SerialName("cookingtime")
+	val cookingTime = mutableStateOf(0)
+	val experience = mutableStateOf(0.0)
+	val group = mutableStateOf("")
+	val ingredient = mutableStateOf(ItemTemplate())
+	val result = mutableStateOf("")
+	
+	init {
+		this.type.value = type
+	}
+	
+	@Composable
+	override fun Content() {
+		Column {
+			ingredient.value.Content()
+			Row {
+				TemplateValue("result", result)
+				TemplateValue("cookingtime", cookingTime)
+				TemplateValue("experience", experience)
+				TemplateValue("group", group)
+			}
+		}
+	}
+}
 
 abstract class CookingRecipeMulti(
-	type: RecipeType, val ingredient: List<ItemTemplate>, val result: String, val experience: Double, @SerialName("cookingtime") val cookingTime: Int = 0,
-	val group: String? = null
-) : RecipeTemplate(type)
+	type: RecipeType
+) : RecipeTemplate() {
+	val cookingTime = mutableStateOf(0)
+	val experience = mutableStateOf(0.0)
+	val group = mutableStateOf("")
+	val ingredient = mutableStateListOf<ItemTemplate>()
+	val result = mutableStateOf("")
+	
+	init {
+		this.type.value = type
+	}
+	
+	@Composable
+	override fun Content() {
+		Column {
+			Row {
+				ingredient.forEach { it.Content() }
+			}
+			
+			Row {
+				TemplateValue("result", result)
+				TemplateValue("cooking time", cookingTime)
+				TemplateValue("experience", experience)
+				TemplateValue("group", group)
+			}
+		}
+	}
+}
 
-abstract class CraftRecipe(type: RecipeType, val result: CraftResultTemplate) : RecipeTemplate(type)
+abstract class CraftRecipe(type: RecipeType) : RecipeTemplate() {
+	val result = mutableStateOf(CraftResultTemplate())
+	
+	init {
+		this.type.value = type
+	}
+}
 
-class BlastingRecipeSingleTemplate(ingredient: ItemTemplate, result: String, experience: Double, cookingTime: Int = 100) :
-	CookingRecipeSingle(RecipeType.BLASTING, ingredient, result, experience, cookingTime)
+class BlastingRecipeSingleTemplate : CookingRecipeSingle(RecipeType.BLASTING) {
+	init {
+		cookingTime.value = 100
+	}
+}
 
-class BlastingRecipeMultiTemplate(ingredient: List<ItemTemplate>, result: String, experience: Double, cookingTime: Int = 100) :
-	CookingRecipeMulti(RecipeType.BLASTING, ingredient, result, experience, cookingTime)
+class BlastingRecipeMultiTemplate : CookingRecipeMulti(RecipeType.BLASTING_MULTI) {
+	init {
+		cookingTime.value = 100
+	}
+}
 
-class CampFireRecipeSingleTemplate(ingredient: ItemTemplate, result: String, experience: Double, cookingTime: Int = 100) :
-	CookingRecipeSingle(RecipeType.CAMPFIRE_COOKING, ingredient, result, experience, cookingTime)
+class CampFireRecipeSingleTemplate : CookingRecipeSingle(RecipeType.CAMPFIRE_COOKING) {
+	init {
+		cookingTime.value = 100
+	}
+}
 
-class CampFireRecipeMultiTemplate(ingredient: List<ItemTemplate>, result: String, experience: Double, cookingTime: Int = 100) :
-	CookingRecipeMulti(RecipeType.CAMPFIRE_COOKING, ingredient, result, experience, cookingTime)
+class CampFireRecipeMultiTemplate : CookingRecipeMulti(RecipeType.CAMPFIRE_COOKING_MULTI) {
+	init {
+		cookingTime.value = 100
+	}
+}
 
-class CraftingShapedRecipeTemplate(
-	val pattern: List<String>, val key: Map<String, CraftResultTemplate>, result: CraftResultTemplate
-) : CraftRecipe(RecipeType.CRAFTING_SHAPED, result)
+class CraftingShapedRecipeTemplate : CraftRecipe(RecipeType.CRAFTING_SHAPED) {
+	val pattern = mutableStateListOf<String>()
+	val key = mutableStateMapOf<String, CraftResultTemplate>()
+	
+	@Composable
+	override fun Content() {
+		Column {
+			Row {
+				TemplateValueList("pattern", pattern)
+			}
+			
+			Row {
+				TemplateValueMap(key)
+			}
+			
+			result.value.Content()
+		}
+	}
+}
 
 
-class CraftingShapelessRecipeTemplate(
-	val ingredients: Map<String, CraftResultTemplate>, result: CraftResultTemplate
-) : CraftRecipe(RecipeType.CRAFTING_SHAPELESS, result)
+class CraftingShapelessRecipeTemplate: CraftRecipe(RecipeType.CRAFTING_SHAPELESS) {
+	val ingredients = mutableStateMapOf<String, CraftResultTemplate>()
+	
+	@Composable
+	override fun Content() {
+		Column {
+			TemplateValueMap(ingredients)
+			result.value.Content()
+		}
+	}
+}
 
-class CraftingSpecialRecipeTemplate(val type: SpecialRecipes) : VanillaTemplate()
+class CraftingSpecialRecipeTemplate : VanillaTemplate() {
+	val type = mutableStateOf(SpecialRecipes.ARMORDYE)
+	
+	@Composable
+	override fun Content() {
+		TemplateValueEnum("type", type) { it.name }
+	}
+}
 
-class SmeltingRecipeSingleTemplate(ingredient: ItemTemplate, result: String, experience: Double, cookingTime: Int = 200) :
-	CookingRecipeSingle(RecipeType.SMELTING, ingredient, result, experience, cookingTime)
+class SmeltingRecipeSingleTemplate : CookingRecipeSingle(RecipeType.SMELTING) {
+	init {
+		cookingTime.value = 200
+	}
+}
 
-class SmeltingRecipeMultiTemplate(ingredient: List<ItemTemplate>, result: String, experience: Double, cookingTime: Int = 200) :
-	CookingRecipeMulti(RecipeType.SMELTING, ingredient, result, experience, cookingTime)
+class SmeltingRecipeMultiTemplate : CookingRecipeMulti(RecipeType.SMELTING_MULTI) {
+	init {
+		cookingTime.value = 200
+	}
+}
 
-class SmithingRecipeTemplate(val base: ItemTemplate, val addition: ItemTemplate, val result: String) : RecipeTemplate(RecipeType.SMITHING)
+class SmithingRecipeTemplate : RecipeTemplate() {
+	val addition = mutableStateOf(ItemTemplate())
+	val base = mutableStateOf(ItemTemplate())
+	val result = mutableStateOf("")
+	
+	init {
+		type.value = RecipeType.SMITHING
+	}
+	
+	@Composable
+	override fun Content() {
+		Column {
+			addition.value.Content()
+			base.value.Content()
+			
+			TemplateValue("result", result)
+		}
+	}
+}
 
-class SmokingRecipeSingleTemplate(ingredient: ItemTemplate, result: String, experience: Double, cookingTime: Int = 100) :
-	CookingRecipeSingle(RecipeType.SMOKING, ingredient, result, experience, cookingTime)
+class SmokingRecipeSingleTemplate : CookingRecipeSingle(RecipeType.SMOKING) {
+	init {
+		cookingTime.value = 100
+	}
+}
 
-class SmokingRecipeMultiTemplate(ingredient: List<ItemTemplate>, result: String, experience: Double, cookingTime: Int = 100) :
-	CookingRecipeMulti(RecipeType.SMOKING, ingredient, result, experience, cookingTime)
+class SmokingRecipeMultiTemplate : CookingRecipeMulti(RecipeType.SMOKING_MULTI) {
+	init {
+		cookingTime.value = 100
+	}
+}
 
-class StoneCuttingRecipeSingleTemplate(result: String, count: Int, ingredient: ItemTemplate) : RecipeTemplate(RecipeType.STONECUTTING)
-class StoneCuttingRecipeMultiTemplate(result: String, count: Int, ingredient: List<ItemTemplate>) : RecipeTemplate(RecipeType.STONECUTTING)
+class StoneCuttingRecipeSingleTemplate : RecipeTemplate() {
+	val count = mutableStateOf(0)
+	val ingredient = mutableStateOf(ItemTemplate())
+	val result = mutableStateOf("")
+	
+	init {
+		type.value = RecipeType.STONECUTTING
+	}
+	
+	@Composable
+	override fun Content() {
+		Column {
+			TemplateValue("count", count)
+			ingredient.value.Content()
+			TemplateValue("result", result)
+		}
+	}
+}
+
+class StoneCuttingRecipeMultiTemplate : RecipeTemplate() {
+	val count = mutableStateOf(0)
+	val ingredient = mutableStateListOf<ItemTemplate>()
+	val result = mutableStateOf("")
+	
+	init {
+		type.value = RecipeType.STONECUTTING_MULTI
+	}
+	
+	@Composable
+	override fun Content() {
+		Column {
+			TemplateValue("count", count)
+			TemplateValueList(ingredient)
+			TemplateValue("result", result)
+		}
+	}
+}
