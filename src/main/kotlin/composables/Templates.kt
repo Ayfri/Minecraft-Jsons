@@ -3,6 +3,7 @@ package composables
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.requiredWidthIn
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
@@ -78,55 +79,76 @@ inline fun <reified T : Enum<T>> TemplateValueEnum(name: String, value: MutableS
 
 @Composable
 inline fun <reified T : Comparable<T>> TemplateValueList(name: String, value: SnapshotStateList<T>, modifier: Modifier = Modifier) {
-	Column(
-		horizontalAlignment = Alignment.CenterHorizontally,
-		verticalArrangement = Arrangement.SpaceBetween,
+	Row(
+		modifier = Modifier.fillMaxWidth()
 	) {
-		value.forEachIndexed { i, item ->
-			Template(
-				name = "$name #$i",
-				value = item.toString(),
-				modifier = Modifier.then(modifier),
-			) {
-				value[i] = convertValue(it)
+		Column(
+			horizontalAlignment = Alignment.CenterHorizontally,
+			verticalArrangement = Arrangement.SpaceBetween,
+		) {
+			value.forEachIndexed { i, item ->
+				Template(
+					name = "$name #$i",
+					value = item.toString(),
+					modifier = Modifier.then(modifier),
+				) {
+					value[i] = convertValue(it)
+				}
 			}
 		}
+		ButtonAdd(value)
 	}
 }
+
 @Composable
 inline fun <reified T : Template> TemplateValueList(value: SnapshotStateList<T>) {
-	Column(
-		horizontalAlignment = Alignment.CenterHorizontally,
-		verticalArrangement = Arrangement.SpaceBetween,
+	Row(
+		modifier = Modifier.fillMaxWidth()
 	) {
-		value.forEach { it.Content() }
+		Column(
+			horizontalAlignment = Alignment.CenterHorizontally,
+			verticalArrangement = Arrangement.SpaceBetween,
+		) {
+			value.forEach { it.Content() }
+		}
+		ButtonAdd(value)
 	}
 }
 
 @Composable
-inline fun <reified K : Comparable<K>, reified V : Comparable<V>>TemplateValueMap(name: String, value: SnapshotStateMap<K, V>, modifier: Modifier = Modifier) {
-	Column(
-		horizontalAlignment = Alignment.CenterHorizontally,
-		verticalArrangement = Arrangement.SpaceBetween,
+inline fun <reified K : Comparable<K>, reified V : Comparable<V>> TemplateValueMap(name: String, value: SnapshotStateMap<K, V>, modifier: Modifier = Modifier) {
+	Row(
+		modifier = Modifier.fillMaxWidth()
 	) {
-		value.forEach { (key, v) ->
-			Template(
-				name = "$name $key",
-				value = v.toString(),
-				modifier = Modifier.then(modifier),
-			) {
-				value[key] = convertValue(it)
+		Column(
+			horizontalAlignment = Alignment.CenterHorizontally,
+			verticalArrangement = Arrangement.SpaceBetween,
+		) {
+			value.forEach { (key, v) ->
+				Template(
+					name = "$name $key",
+					value = v.toString(),
+					modifier = Modifier.then(modifier),
+				) {
+					value[key] = convertValue(it)
+				}
 			}
 		}
+		ButtonAdd(value)
 	}
 }
 
 @Composable
-inline fun <reified K : Comparable<K>, reified V : Template>TemplateValueMap(value: SnapshotStateMap<K, V>) {
-	Column(
-		horizontalAlignment = Alignment.CenterHorizontally,
-		verticalArrangement = Arrangement.SpaceBetween,
+inline fun <reified K : Comparable<K>, reified V : Template> TemplateValueMap(value: SnapshotStateMap<K, V>) {
+	Row(
+		modifier = Modifier.fillMaxWidth()
 	) {
-		value.values.forEach { it.Content() }
+		Column(
+			horizontalAlignment = Alignment.CenterHorizontally,
+			verticalArrangement = Arrangement.SpaceBetween,
+		) {
+			value.values.forEach { it.Content() }
+		}
+		ButtonAdd(value)
 	}
 }

@@ -73,6 +73,7 @@ inline fun <reified T : Enum<T>> DropDown(
 	label: String,
 	modifier: Modifier = Modifier,
 	crossinline transform: (T) -> String = { it.name },
+	crossinline onChange: (T) -> Unit = {}
 ) {
 	DropDown(
 		enumValues<T>().asList(),
@@ -80,6 +81,7 @@ inline fun <reified T : Enum<T>> DropDown(
 		label,
 		modifier,
 		transform,
+		onChange,
 	)
 }
 
@@ -90,6 +92,7 @@ inline fun <T> DropDown(
 	label: String,
 	modifier: Modifier = Modifier,
 	crossinline transform: (T) -> String,
+	crossinline onChange: (T) -> Unit = {}
 ) {
 	Column(
 		modifier,
@@ -115,14 +118,15 @@ inline fun <T> DropDown(
 			onDismissRequest = { expanded = false },
 			modifier = Modifier.width(with(LocalDensity.current) { textFieldSize.width.toDp() }),
 		) {
-			for (t in items) {
+			for (item in items) {
 				DropdownMenuItem(
 					onClick = {
-						selection.value = t
+						selection.value = item
+						onChange(item)
 						expanded = false
 					},
 				) {
-					Text(transform(t))
+					Text(transform(item))
 				}
 			}
 		}

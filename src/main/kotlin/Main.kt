@@ -35,7 +35,7 @@ lateinit var frame: JComponent
 @Preview
 fun App() {
 	val folder = remember { mutableStateOf("") }
-	val templateName = remember { mutableStateOf("") }
+	val templateName = remember { mutableStateOf<Any?>(RecipeType.values()[0]) }
 	val type = remember { mutableStateOf(TemplateType.RECIPE) }
 	
 	Row {
@@ -66,8 +66,7 @@ fun App() {
 					)
 					
 					DropDown(recipeType, "Recipe Type") {
-						templateName.value = it.name
-						it.name
+						templateName.value = it
 					}
 				}
 			}
@@ -103,8 +102,11 @@ fun App() {
 			Column(
 				modifier = Modifier.fillMaxSize().padding(15.dp),
 			) {
-				Text("Values")
-				val template = RecipeType.values().find { it.name == templateName.value }?.toRecipe() ?: return@Row
+				val template = when (templateName.value) {
+					is RecipeType -> (templateName.value as RecipeType).toTemplate()
+					else -> return@Column
+				}
+				
 				composables.Template(template)
 			}
 		}

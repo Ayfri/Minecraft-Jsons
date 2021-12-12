@@ -20,6 +20,7 @@ enum class RecipeType {
 	CAMPFIRE_COOKING_MULTI,
 	CRAFTING_SHAPED,
 	CRAFTING_SHAPELESS,
+	CRAFTING_SPECIAL,
 	SMELTING,
 	SMELTING_MULTI,
 	SMITHING,
@@ -28,7 +29,7 @@ enum class RecipeType {
 	STONECUTTING,
 	STONECUTTING_MULTI;
 	
-	fun toRecipe(): VanillaTemplate {
+	fun toTemplate(): VanillaTemplate {
 		return when (this) {
 			BLASTING -> BlastingRecipeSingleTemplate()
 			BLASTING_MULTI -> BlastingRecipeMultiTemplate()
@@ -36,6 +37,7 @@ enum class RecipeType {
 			CAMPFIRE_COOKING_MULTI -> CampFireRecipeMultiTemplate()
 			CRAFTING_SHAPED -> CraftingShapedRecipeTemplate()
 			CRAFTING_SHAPELESS -> CraftingShapelessRecipeTemplate()
+			CRAFTING_SPECIAL -> CraftingSpecialRecipeTemplate()
 			SMELTING -> SmeltingRecipeSingleTemplate()
 			SMELTING_MULTI -> SmeltingRecipeMultiTemplate()
 			SMITHING -> SmithingRecipeTemplate()
@@ -102,7 +104,7 @@ abstract class CookingRecipeSingle(
 			ingredient.value.Content()
 			Row {
 				TemplateValue("result", result)
-				TemplateValue("cookingtime", cookingTime)
+				TemplateValue("cooking time", cookingTime)
 				TemplateValue("experience", experience)
 				TemplateValue("group", group)
 			}
@@ -126,9 +128,7 @@ abstract class CookingRecipeMulti(
 	@Composable
 	override fun Content() {
 		Column {
-			Row {
-				ingredient.forEach { it.Content() }
-			}
+			TemplateValueList(ingredient)
 			
 			Row {
 				TemplateValue("result", result)
@@ -179,14 +179,8 @@ class CraftingShapedRecipeTemplate : CraftRecipe(RecipeType.CRAFTING_SHAPED) {
 	@Composable
 	override fun Content() {
 		Column {
-			Row {
-				TemplateValueList("pattern", pattern)
-			}
-			
-			Row {
-				TemplateValueMap(key)
-			}
-			
+			TemplateValueList("pattern", pattern)
+			TemplateValueMap(key)
 			result.value.Content()
 		}
 	}
@@ -210,7 +204,7 @@ class CraftingSpecialRecipeTemplate : VanillaTemplate() {
 	
 	@Composable
 	override fun Content() {
-		TemplateValueEnum("type", type) { it.name }
+		TemplateValueEnum("type", type) { it.name.lowercase() }
 	}
 }
 
