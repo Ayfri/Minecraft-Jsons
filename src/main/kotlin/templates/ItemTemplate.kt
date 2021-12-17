@@ -8,7 +8,10 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 class ItemTemplate : VanillaTemplate() {
+	@Serializable(with = MutableStateSerializer::class)
 	val id = mutableStateOf("")
+	
+	@Serializable(with = MutableStateSerializer::class)
 	val tag = mutableStateOf("")
 	
 	@Composable

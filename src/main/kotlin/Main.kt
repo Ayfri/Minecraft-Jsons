@@ -1,11 +1,13 @@
-
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.paddingFromBaseline
+import androidx.compose.material.Button
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
@@ -25,16 +27,31 @@ import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import composables.ButtonFolderSelector
 import composables.DropDown
+import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import templates.CraftingShapedRecipeTemplate
 import templates.RecipeType
+import templates.Template
 import templates.TemplateType
+import java.io.File
 import javax.swing.JComponent
 
 lateinit var frame: JComponent
 
+const val CLASS_TYPE_TO_REMOVE = "class_type_to_remove"
+
+@OptIn(InternalSerializationApi::class)
 @Composable
 @Preview
 fun App() {
-	val folder = remember { mutableStateOf("") }
+	val fileName = remember { mutableStateOf("file") }
+	val folder = remember { mutableStateOf("./") }
+	val templateValue = remember { mutableStateOf<Template>(CraftingShapedRecipeTemplate()) }
 	val templateName = remember { mutableStateOf<Any?>(RecipeType.values()[0]) }
 	val type = remember { mutableStateOf(TemplateType.RECIPE) }
 	
@@ -53,10 +70,9 @@ fun App() {
 			
 			if (type.value == TemplateType.RECIPE) {
 				Column(
-					modifier = Modifier.fillMaxSize().padding(top = 100.dp),
+					modifier = Modifier.fillMaxWidth().fillMaxHeight(0.8f).padding(top = 100.dp),
 					horizontalAlignment = Alignment.CenterHorizontally
 				) {
-					val fileName = remember { mutableStateOf("") }
 					val recipeType = remember { mutableStateOf(RecipeType.CRAFTING_SHAPED) }
 					
 					OutlinedTextField(
@@ -67,8 +83,42 @@ fun App() {
 					
 					DropDown(recipeType, "Recipe Type") {
 						templateName.value = it
+						templateValue.value = it.toTemplate()
 					}
 				}
+			}
+			
+			Button(
+				modifier = Modifier.paddingFromBaseline(bottom = 10.dp),
+				onClick = {
+					val file = File(folder.value, "${fileName.value}.json")
+					
+					if (file.exists()) file.delete()
+					file.createNewFile()
+					
+					val writer = file.writer()
+					val serializer = Json {
+						classDiscriminator = CLASS_TYPE_TO_REMOVE
+						isLenient = true
+						coerceInputValues = true
+						prettyPrint = true
+					}
+					
+					val json = serializer.encodeToJsonElement(templateValue.value castWith type.value)
+					val jsonFixed = json.jsonObject.filterNot {
+						it.key == CLASS_TYPE_TO_REMOVE
+								|| try {
+							it.value.jsonPrimitive.contentOrNull?.isEmpty() == true
+						} catch (_: Exception) {
+							false
+						}
+					}
+					
+					writer.write(serializer.encodeToString(jsonFixed))
+					writer.close()
+				}
+			) {
+				Text("Create")
 			}
 		}
 		
@@ -102,12 +152,7 @@ fun App() {
 			Column(
 				modifier = Modifier.fillMaxSize().padding(15.dp),
 			) {
-				val template = when (templateName.value) {
-					is RecipeType -> (templateName.value as RecipeType).toTemplate()
-					else -> return@Column
-				}
-				
-				composables.Template(template)
+				composables.Template(templateValue.value)
 			}
 		}
 	}

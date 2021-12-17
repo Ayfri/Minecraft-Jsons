@@ -10,9 +10,17 @@ import composables.TemplateValue
 import composables.TemplateValueEnum
 import composables.TemplateValueList
 import composables.TemplateValueMap
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.encoding.decodeStructure
+import kotlinx.serialization.encoding.encodeStructure
+import kotlinx.serialization.serializer
 
+@Serializable
 enum class RecipeType {
 	BLASTING,
 	BLASTING_MULTI,
@@ -49,6 +57,7 @@ enum class RecipeType {
 	}
 }
 
+@Serializable
 enum class SpecialRecipes {
 	ARMORDYE,
 	BANNERDUPLICATE,
@@ -66,13 +75,17 @@ enum class SpecialRecipes {
 }
 
 @Serializable
-abstract class RecipeTemplate : VanillaTemplate() {
-	val type = mutableStateOf(RecipeType.CRAFTING_SHAPELESS)
+sealed class RecipeTemplate : VanillaTemplate() {
+	@Serializable(with = MutableStateSerializerLowerCase::class)
+	var type = mutableStateOf(RecipeType.CRAFTING_SHAPELESS)
 }
 
 @Serializable
 class CraftResultTemplate : VanillaTemplate() {
+	@Serializable(with = MutableStateSerializerLowerCase::class)
 	val result = mutableStateOf("")
+	
+	@Serializable(with = MutableStateSerializerLowerCase::class)
 	val count = mutableStateOf(0)
 	
 	@Composable
@@ -84,19 +97,23 @@ class CraftResultTemplate : VanillaTemplate() {
 	}
 }
 
-abstract class CookingRecipeSingle(
-	type: RecipeType,
-) : RecipeTemplate() {
+@Serializable
+sealed class CookingRecipeSingle : RecipeTemplate() {
 	@SerialName("cookingtime")
+	@Serializable(with = MutableStateSerializer::class)
 	val cookingTime = mutableStateOf(0)
-	val experience = mutableStateOf(0.0)
-	val group = mutableStateOf("")
-	val ingredient = mutableStateOf(ItemTemplate())
-	val result = mutableStateOf("")
 	
-	init {
-		this.type.value = type
-	}
+	@Serializable(with = MutableStateSerializer::class)
+	val experience = mutableStateOf(0.0)
+	
+	@Serializable(with = MutableStateSerializer::class)
+	val group = mutableStateOf("")
+	
+	@Serializable(with = MutableStateSerializer::class)
+	val ingredient = mutableStateOf(ItemTemplate())
+	
+	@Serializable(with = MutableStateSerializer::class)
+	val result = mutableStateOf("")
 	
 	@Composable
 	override fun Content() {
@@ -112,18 +129,22 @@ abstract class CookingRecipeSingle(
 	}
 }
 
-abstract class CookingRecipeMulti(
-	type: RecipeType
-) : RecipeTemplate() {
+@Serializable
+sealed class CookingRecipeMulti : RecipeTemplate() {
+	@Serializable(with = MutableStateSerializer::class)
 	val cookingTime = mutableStateOf(0)
-	val experience = mutableStateOf(0.0)
-	val group = mutableStateOf("")
-	val ingredient = mutableStateListOf<ItemTemplate>()
-	val result = mutableStateOf("")
 	
-	init {
-		this.type.value = type
-	}
+	@Serializable(with = MutableStateSerializer::class)
+	val experience = mutableStateOf(0.0)
+	
+	@Serializable(with = MutableStateSerializer::class)
+	val group = mutableStateOf("")
+	
+	@Serializable(with = SnapshotListSerializer::class)
+	val ingredient = mutableStateListOf<ItemTemplate>()
+	
+	@Serializable(with = MutableStateSerializer::class)
+	val result = mutableStateOf("")
 	
 	@Composable
 	override fun Content() {
@@ -140,41 +161,55 @@ abstract class CookingRecipeMulti(
 	}
 }
 
-abstract class CraftRecipe(type: RecipeType) : RecipeTemplate() {
+@Serializable
+sealed class CraftRecipe : RecipeTemplate() {
+	@Serializable(with = MutableStateSerializer::class)
 	val result = mutableStateOf(CraftResultTemplate())
+}
+
+@Serializable
+class BlastingRecipeSingleTemplate : CookingRecipeSingle() {
+	init {
+		cookingTime.value = 100
+		type.value = RecipeType.BLASTING
+	}
+}
+
+@Serializable
+class BlastingRecipeMultiTemplate : CookingRecipeMulti() {
+	init {
+		cookingTime.value = 100
+		type.value = RecipeType.BLASTING
+	}
+}
+
+@Serializable
+class CampFireRecipeSingleTemplate : CookingRecipeSingle() {
+	init {
+		cookingTime.value = 100
+		type.value = RecipeType.CAMPFIRE_COOKING
+	}
+}
+
+@Serializable
+class CampFireRecipeMultiTemplate : CookingRecipeMulti() {
+	init {
+		cookingTime.value = 100
+		type.value = RecipeType.CAMPFIRE_COOKING_MULTI
+	}
+}
+
+@Serializable
+class CraftingShapedRecipeTemplate : CraftRecipe() {
+	@Serializable(with = SnapshotListSerializer::class)
+	val pattern = mutableStateListOf<String>()
+	
+	@Serializable(with = SnapshotMapSerializer::class)
+	val key = mutableStateMapOf<String, CraftResultTemplate>()
 	
 	init {
-		this.type.value = type
+		type.value = RecipeType.CRAFTING_SHAPED
 	}
-}
-
-class BlastingRecipeSingleTemplate : CookingRecipeSingle(RecipeType.BLASTING) {
-	init {
-		cookingTime.value = 100
-	}
-}
-
-class BlastingRecipeMultiTemplate : CookingRecipeMulti(RecipeType.BLASTING_MULTI) {
-	init {
-		cookingTime.value = 100
-	}
-}
-
-class CampFireRecipeSingleTemplate : CookingRecipeSingle(RecipeType.CAMPFIRE_COOKING) {
-	init {
-		cookingTime.value = 100
-	}
-}
-
-class CampFireRecipeMultiTemplate : CookingRecipeMulti(RecipeType.CAMPFIRE_COOKING_MULTI) {
-	init {
-		cookingTime.value = 100
-	}
-}
-
-class CraftingShapedRecipeTemplate : CraftRecipe(RecipeType.CRAFTING_SHAPED) {
-	val pattern = mutableStateListOf<String>()
-	val key = mutableStateMapOf<String, CraftResultTemplate>()
 	
 	@Composable
 	override fun Content() {
@@ -187,8 +222,14 @@ class CraftingShapedRecipeTemplate : CraftRecipe(RecipeType.CRAFTING_SHAPED) {
 }
 
 
-class CraftingShapelessRecipeTemplate: CraftRecipe(RecipeType.CRAFTING_SHAPELESS) {
+@Serializable
+class CraftingShapelessRecipeTemplate : CraftRecipe() {
+	@Serializable(with = SnapshotMapSerializer::class)
 	val ingredients = mutableStateMapOf<String, CraftResultTemplate>()
+	
+	init {
+		type.value = RecipeType.CRAFTING_SHAPELESS
+	}
 	
 	@Composable
 	override fun Content() {
@@ -199,30 +240,66 @@ class CraftingShapelessRecipeTemplate: CraftRecipe(RecipeType.CRAFTING_SHAPELESS
 	}
 }
 
-class CraftingSpecialRecipeTemplate : VanillaTemplate() {
-	val type = mutableStateOf(SpecialRecipes.ARMORDYE)
+@Serializable(with = CraftingSpecialRecipeSerializer::class)
+class CraftingSpecialRecipeTemplate : RecipeTemplate() {
+	@Serializable(with = MutableStateSerializerLowerCase::class)
+	val specialType = mutableStateOf(SpecialRecipes.ARMORDYE)
 	
 	@Composable
 	override fun Content() {
-		TemplateValueEnum("type", type) { it.name.lowercase() }
+		TemplateValueEnum("type", specialType) { it.name.lowercase() }
+	}
+	
+}
+
+object CraftingSpecialRecipeSerializer : KSerializer<CraftingSpecialRecipeTemplate> {
+	override fun deserialize(decoder: Decoder): CraftingSpecialRecipeTemplate {
+		return decoder.decodeStructure(descriptor) {
+			val type = decodeStringElement(descriptor, 0)
+			
+			CraftingSpecialRecipeTemplate().apply {
+				specialType.value = SpecialRecipes.valueOf(type)
+			}
+		}
+	}
+	
+	override val descriptor = buildClassSerialDescriptor("CraftingSpecialRecipeTemplate") {
+		element("type", MutableStateSerializerLowerCase(serializer<String>()).descriptor)
+	}
+	
+	
+	override fun serialize(encoder: Encoder, value: CraftingSpecialRecipeTemplate) {
+		encoder.encodeStructure(descriptor) {
+			encodeStringElement(descriptor, 0, value.specialType.value.name.lowercase())
+		}
 	}
 }
 
-class SmeltingRecipeSingleTemplate : CookingRecipeSingle(RecipeType.SMELTING) {
+@Serializable
+class SmeltingRecipeSingleTemplate : CookingRecipeSingle() {
 	init {
 		cookingTime.value = 200
+		type.value = RecipeType.SMELTING
 	}
 }
 
-class SmeltingRecipeMultiTemplate : CookingRecipeMulti(RecipeType.SMELTING_MULTI) {
+@Serializable
+class SmeltingRecipeMultiTemplate : CookingRecipeMulti() {
 	init {
 		cookingTime.value = 200
+		type.value = RecipeType.SMELTING_MULTI
 	}
 }
 
+@Serializable
 class SmithingRecipeTemplate : RecipeTemplate() {
+	@Serializable(with = MutableStateSerializer::class)
 	val addition = mutableStateOf(ItemTemplate())
+	
+	@Serializable(with = MutableStateSerializer::class)
 	val base = mutableStateOf(ItemTemplate())
+	
+	@Serializable(with = MutableStateSerializer::class)
 	val result = mutableStateOf("")
 	
 	init {
@@ -240,21 +317,31 @@ class SmithingRecipeTemplate : RecipeTemplate() {
 	}
 }
 
-class SmokingRecipeSingleTemplate : CookingRecipeSingle(RecipeType.SMOKING) {
+@Serializable
+class SmokingRecipeSingleTemplate : CookingRecipeSingle() {
 	init {
 		cookingTime.value = 100
+		type.value = RecipeType.SMOKING
 	}
 }
 
-class SmokingRecipeMultiTemplate : CookingRecipeMulti(RecipeType.SMOKING_MULTI) {
+@Serializable
+class SmokingRecipeMultiTemplate : CookingRecipeMulti() {
 	init {
 		cookingTime.value = 100
+		type.value = RecipeType.SMOKING_MULTI
 	}
 }
 
+@Serializable
 class StoneCuttingRecipeSingleTemplate : RecipeTemplate() {
+	@Serializable(with = MutableStateSerializer::class)
 	val count = mutableStateOf(0)
+	
+	@Serializable(with = MutableStateSerializer::class)
 	val ingredient = mutableStateOf(ItemTemplate())
+	
+	@Serializable(with = MutableStateSerializer::class)
 	val result = mutableStateOf("")
 	
 	init {
@@ -271,9 +358,15 @@ class StoneCuttingRecipeSingleTemplate : RecipeTemplate() {
 	}
 }
 
+@Serializable
 class StoneCuttingRecipeMultiTemplate : RecipeTemplate() {
+	@Serializable(with = MutableStateSerializer::class)
 	val count = mutableStateOf(0)
+	
+	@Serializable(with = SnapshotListSerializer::class)
 	val ingredient = mutableStateListOf<ItemTemplate>()
+	
+	@Serializable(with = MutableStateSerializer::class)
 	val result = mutableStateOf("")
 	
 	init {
