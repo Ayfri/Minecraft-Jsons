@@ -221,7 +221,6 @@ class CraftingShapedRecipeTemplate : CraftRecipe() {
 	}
 }
 
-
 @Serializable
 class CraftingShapelessRecipeTemplate : CraftRecipe() {
 	@Serializable(with = SnapshotMapSerializer::class)

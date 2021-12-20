@@ -1,3 +1,4 @@
+
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,6 +40,7 @@ import templates.RecipeType
 import templates.Template
 import templates.TemplateType
 import java.io.File
+import java.nio.file.Paths
 import javax.swing.JComponent
 
 lateinit var frame: JComponent
@@ -50,7 +52,7 @@ const val CLASS_TYPE_TO_REMOVE = "class_type_to_remove"
 @Preview
 fun App() {
 	val fileName = remember { mutableStateOf("file") }
-	val folder = remember { mutableStateOf("./") }
+	val folder = remember { mutableStateOf(Paths.get("").toAbsolutePath().normalize().toString()) }
 	val templateValue = remember { mutableStateOf<Template>(CraftingShapedRecipeTemplate()) }
 	val templateName = remember { mutableStateOf<Any?>(RecipeType.values()[0]) }
 	val type = remember { mutableStateOf(TemplateType.RECIPE) }

@@ -3,7 +3,6 @@
 package templates
 
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -51,7 +50,7 @@ class SnapshotMapSerializer<K, V>(private val keySerializer: KSerializer<K>, pri
 	}
 }
 
-@Serializer(forClass = State::class)
+@Serializer(forClass = MutableState::class)
 class MutableStateSerializer<T>(private val dataSerializer: KSerializer<T>) : KSerializer<MutableState<T>> {
 	override fun deserialize(decoder: Decoder) = mutableStateOf(decoder.decodeSerializableValue(dataSerializer))
 	override val descriptor: SerialDescriptor = dataSerializer.descriptor
