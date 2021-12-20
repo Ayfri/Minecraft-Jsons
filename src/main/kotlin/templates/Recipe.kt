@@ -205,7 +205,7 @@ class CraftingShapedRecipeTemplate : CraftRecipe() {
 	val pattern = mutableStateListOf<String>()
 	
 	@Serializable(with = SnapshotMapSerializer::class)
-	val key = mutableStateMapOf<String, CraftResultTemplate>()
+	val key = mutableStateMapOf<String, ItemTemplate>()
 	
 	init {
 		type.value = RecipeType.CRAFTING_SHAPED
