@@ -2,17 +2,20 @@ package templates
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import composables.TemplateValue
 import composables.TemplateValueEnum
 import composables.TemplateValueList
-import composables.TemplateValueMap
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
@@ -81,7 +84,7 @@ sealed class RecipeTemplate : VanillaTemplate() {
 }
 
 @Serializable
-class CraftResultTemplate : VanillaTemplate() {
+open class CraftResultTemplate : VanillaTemplate() {
 	@Serializable(with = MutableStateSerializerLowerCase::class)
 	val result = mutableStateOf("")
 	
@@ -91,6 +94,22 @@ class CraftResultTemplate : VanillaTemplate() {
 	@Composable
 	override fun Content() {
 		Row {
+			TemplateValue("result", result)
+			TemplateValue("count", count)
+		}
+	}
+}
+
+@Serializable
+class CraftResultTemplateMap : CraftResultTemplate(), TemplateMapSerializable {
+	@Transient
+	override val key = mutableStateOf("")
+	
+	@Composable
+	override fun Content() {
+		Row {
+			TemplateValue("key", key)
+			Spacer(modifier = Modifier.width(20.dp))
 			TemplateValue("result", result)
 			TemplateValue("count", count)
 		}
@@ -204,8 +223,8 @@ class CraftingShapedRecipeTemplate : CraftRecipe() {
 	@Serializable(with = SnapshotListSerializer::class)
 	val pattern = mutableStateListOf<String>()
 	
-	@Serializable(with = SnapshotMapSerializer::class)
-	val key = mutableStateMapOf<String, ItemTemplate>()
+	@Serializable(with = SnapshotListMapSerializer::class)
+	val key = mutableStateListOf<ItemTemplateMap>()
 	
 	init {
 		type.value = RecipeType.CRAFTING_SHAPED
@@ -215,7 +234,7 @@ class CraftingShapedRecipeTemplate : CraftRecipe() {
 	override fun Content() {
 		Column {
 			TemplateValueList("pattern", pattern)
-			TemplateValueMap(key)
+			TemplateValueList(key)
 			result.value.Content()
 		}
 	}
@@ -223,8 +242,8 @@ class CraftingShapedRecipeTemplate : CraftRecipe() {
 
 @Serializable
 class CraftingShapelessRecipeTemplate : CraftRecipe() {
-	@Serializable(with = SnapshotMapSerializer::class)
-	val ingredients = mutableStateMapOf<String, CraftResultTemplate>()
+	@Serializable(with = SnapshotListMapSerializer::class)
+	val ingredients = mutableStateListOf<CraftResultTemplateMap>()
 	
 	init {
 		type.value = RecipeType.CRAFTING_SHAPELESS
@@ -233,7 +252,7 @@ class CraftingShapelessRecipeTemplate : CraftRecipe() {
 	@Composable
 	override fun Content() {
 		Column {
-			TemplateValueMap(ingredients)
+			TemplateValueList(ingredients)
 			result.value.Content()
 		}
 	}
@@ -248,7 +267,6 @@ class CraftingSpecialRecipeTemplate : RecipeTemplate() {
 	override fun Content() {
 		TemplateValueEnum("type", specialType) { it.name.lowercase() }
 	}
-	
 }
 
 object CraftingSpecialRecipeSerializer : KSerializer<CraftingSpecialRecipeTemplate> {

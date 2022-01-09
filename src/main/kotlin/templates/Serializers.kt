@@ -4,19 +4,24 @@ package templates
 
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
-import androidx.compose.runtime.snapshots.SnapshotStateMap
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializer
+import kotlinx.serialization.Transient
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+
+interface TemplateMapSerializable {
+	@Transient
+	val key: MutableState<String>
+}
 
 @Serializer(forClass = SnapshotStateList::class)
 class SnapshotListSerializer<T>(private val dataSerializer: KSerializer<T>) : KSerializer<SnapshotStateList<T>> {
@@ -34,19 +39,21 @@ class SnapshotListSerializer<T>(private val dataSerializer: KSerializer<T>) : KS
 	}
 }
 
-@Serializer(forClass = SnapshotStateMap::class)
-class SnapshotMapSerializer<K, V>(private val keySerializer: KSerializer<K>, private val valueSerializer: KSerializer<V>) : KSerializer<SnapshotStateMap<K, V>> {
-	override val descriptor: SerialDescriptor = MapSerializer(keySerializer, valueSerializer).descriptor
+class SnapshotListMapSerializer<T>(private val dataSerializer: KSerializer<T>) : KSerializer<SnapshotStateList<T>> where T : Template, T : TemplateMapSerializable {
+	override val descriptor: SerialDescriptor = ListSerializer(dataSerializer).descriptor
 	
-	override fun serialize(encoder: Encoder, value: SnapshotStateMap<K, V>) {
-		encoder.encodeSerializableValue(MapSerializer(keySerializer, valueSerializer), value as Map<K, V>)
+	override fun serialize(encoder: Encoder, value: SnapshotStateList<T>) {
+		encoder.encodeSerializableValue(MapSerializer(String.serializer(), dataSerializer), value.associateBy { it.key.value })
 	}
 	
-	override fun deserialize(decoder: Decoder): SnapshotStateMap<K, V> {
-		val map = mutableStateMapOf<K, V>()
-		val items = decoder.decodeSerializableValue(MapSerializer(keySerializer, valueSerializer))
-		map.putAll(items)
-		return map
+	override fun deserialize(decoder: Decoder): SnapshotStateList<T> {
+		val list = mutableStateListOf<T>()
+		val items = decoder.decodeSerializableValue(MapSerializer(String.serializer(), dataSerializer))
+		items.forEach { (key, value) ->
+			value.key.value = key
+			list.add(value)
+		}
+		return list
 	}
 }
 
