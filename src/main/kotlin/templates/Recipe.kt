@@ -233,8 +233,8 @@ class CraftingShapedRecipeTemplate : CraftRecipe() {
 	@Composable
 	override fun Content() {
 		Column {
-			TemplateValueList("pattern", pattern)
-			TemplateValueList(key)
+			TemplateValueList("pattern", pattern, limit = 3)
+			TemplateValueList(key, 9)
 			result.value.Content()
 		}
 	}
@@ -252,7 +252,7 @@ class CraftingShapelessRecipeTemplate : CraftRecipe() {
 	@Composable
 	override fun Content() {
 		Column {
-			TemplateValueList(ingredients)
+			TemplateValueList(ingredients, 9)
 			result.value.Content()
 		}
 	}

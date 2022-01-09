@@ -94,7 +94,7 @@ inline fun <reified T : Enum<T>> TemplateValueEnum(name: String, value: MutableS
 }
 
 @Composable
-inline fun <reified T : Comparable<T>> TemplateValueList(name: String, value: SnapshotStateList<T>, modifier: Modifier = Modifier) {
+inline fun <reified T : Comparable<T>> TemplateValueList(name: String, value: SnapshotStateList<T>, modifier: Modifier = Modifier, limit: Int = Int.MAX_VALUE) {
 	Row(
 		modifier = Modifier.fillMaxWidth()
 	) {
@@ -112,12 +112,13 @@ inline fun <reified T : Comparable<T>> TemplateValueList(name: String, value: Sn
 				}
 			}
 		}
-		ButtonAdd(value)
+		
+		if (value.size < limit) ButtonAdd(value)
 	}
 }
 
 @Composable
-inline fun <reified T : Template> TemplateValueList(value: SnapshotStateList<T>) {
+inline fun <reified T : Template> TemplateValueList(value: SnapshotStateList<T>, limit: Int = Int.MAX_VALUE) {
 	Row(
 		modifier = Modifier.fillMaxWidth()
 	) {
@@ -127,6 +128,7 @@ inline fun <reified T : Template> TemplateValueList(value: SnapshotStateList<T>)
 		) {
 			value.forEach { it.Content() }
 		}
-		ButtonAdd(value)
+		
+		if (value.size < limit) ButtonAdd(value)
 	}
 }
