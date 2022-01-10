@@ -1,12 +1,8 @@
 package templates
 
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import composables.TemplateValue
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
@@ -32,14 +28,4 @@ open class ItemTemplate : VanillaTemplate() {
 class ItemTemplateMap : ItemTemplate(), TemplateMapSerializable {
 	@Transient
 	override val key = mutableStateOf("")
-	
-	@Composable
-	override fun Content() {
-		Row {
-			TemplateValue("key", key)
-			Spacer(Modifier.width(20.dp))
-			TemplateValue("id", id)
-			TemplateValue("tag", tag)
-		}
-	}
 }

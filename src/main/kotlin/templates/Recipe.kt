@@ -1,13 +1,9 @@
 package templates
 
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import composables.TemplateValue
 import composables.TemplateValueEnum
 import composables.TemplateValueList
@@ -103,16 +99,6 @@ open class CraftResultTemplate : VanillaTemplate() {
 class CraftResultTemplateMap : CraftResultTemplate(), TemplateMapSerializable {
 	@Transient
 	override val key = mutableStateOf("")
-	
-	@Composable
-	override fun Content() {
-		Row {
-			TemplateValue("key", key)
-			Spacer(modifier = Modifier.width(20.dp))
-			TemplateValue("result", result)
-			TemplateValue("count", count)
-		}
-	}
 }
 
 @Serializable
@@ -229,9 +215,8 @@ class CraftingShapedRecipeTemplate : CraftRecipe() {
 	@Composable
 	override fun Content() {
 		TemplateValueList("pattern", pattern, limit = 3)
-		TemplateValueList(key, 9)
+		TemplateValueList(key, 9, true)
 		result.value.Content()
-		
 	}
 }
 
@@ -246,7 +231,7 @@ class CraftingShapelessRecipeTemplate : CraftRecipe() {
 	
 	@Composable
 	override fun Content() {
-		TemplateValueList(ingredients, 9)
+		TemplateValueList(ingredients, 9, true)
 		result.value.Content()
 	}
 }
