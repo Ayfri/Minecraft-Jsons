@@ -1,11 +1,15 @@
-
 import androidx.compose.desktop.ui.tooling.preview.Preview
+import androidx.compose.foundation.VerticalScrollbar
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.rememberScrollbarAdapter
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -83,10 +87,10 @@ fun App() {
 		) {
 			FolderSelector(folder)
 			
-			Column(
-				modifier = Modifier.fillMaxSize().padding(15.dp),
-			) {
-				composables.Template(templateValue.value)
+			Box(modifier = Modifier.fillMaxSize().padding(15.dp)) {
+				val stateVertical = rememberScrollState(0)
+				composables.Template(templateValue.value, Modifier.verticalScroll(stateVertical))
+				VerticalScrollbar(modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(), adapter = rememberScrollbarAdapter(stateVertical))
 			}
 		}
 	}
