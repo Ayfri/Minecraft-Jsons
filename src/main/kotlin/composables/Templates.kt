@@ -92,7 +92,7 @@ inline fun <reified T : Comparable<T>> Template(
 		singleLine = true,
 		value = value.toString(),
 		label = {
-			if (required) Text(
+			if (required || isError) Text(
 				text = AnnotatedString("$name*", SpanStyle(color = if (isErrorEmpty) MaterialTheme.colors.error else MaterialTheme.colors.onBackground)),
 				style = MaterialTheme.typography.caption,
 				modifier = Modifier.padding(start = 8.dp, end = 8.dp),
@@ -202,12 +202,13 @@ inline fun <reified T> TemplateValueList(value: SnapshotStateList<T>, limit: Int
 			verticalArrangement = Arrangement.SpaceBetween,
 		) {
 			value.forEachIndexed { index, v ->
+				val errorMessage = mutableStateOf<String?>(null)
+				
 				Row(
 					verticalAlignment = Alignment.CenterVertically,
 				) {
 					ButtonDelete(value, index)
-					val errorMessage = mutableStateOf<String?>(null)
-					if (value.count { it == v } > 2 && unique) errorMessage.value = "Keys must be unique"
+					if (value.count { it.key.value == v.key.value } > 1 && unique) errorMessage.value = "Keys must be unique"
 					TemplateValue("key", v.key, required = true, errorMessage = errorMessage.value, isError = errorMessage.value != null)
 					Spacer(Modifier.width(20.dp))
 					v.Content()
