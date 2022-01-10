@@ -103,12 +103,17 @@ inline fun <reified T : Comparable<T>> TemplateValueList(name: String, value: Sn
 			verticalArrangement = Arrangement.SpaceBetween,
 		) {
 			value.forEachIndexed { i, item ->
-				Template(
-					name = "$name #$i",
-					value = item.toString(),
-					modifier = Modifier.then(modifier),
+				Row(
+					verticalAlignment = Alignment.CenterVertically,
 				) {
-					value[i] = convertValue(it)
+					ButtonDelete(value, i)
+					Template(
+						name = "$name #$i",
+						value = item.toString(),
+						modifier = Modifier.then(modifier),
+					) {
+						value[i] = convertValue(it)
+					}
 				}
 			}
 		}
@@ -126,7 +131,14 @@ inline fun <reified T : Template> TemplateValueList(value: SnapshotStateList<T>,
 			horizontalAlignment = Alignment.CenterHorizontally,
 			verticalArrangement = Arrangement.SpaceBetween,
 		) {
-			value.forEach { it.Content() }
+			value.forEachIndexed { index, it ->
+				Row(
+					verticalAlignment = Alignment.CenterVertically,
+				) {
+					ButtonDelete(value, index)
+					it.Content()
+				}
+			}
 		}
 		
 		if (value.size < limit) ButtonAdd(value)
