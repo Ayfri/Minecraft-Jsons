@@ -1,6 +1,5 @@
 package templates
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
@@ -136,15 +135,14 @@ sealed class CookingRecipeSingle : RecipeTemplate() {
 	
 	@Composable
 	override fun Content() {
-		Column {
-			ingredient.value.Content()
-			Row {
-				TemplateValue("result", result)
-				TemplateValue("cooking time", cookingTime)
-				TemplateValue("experience", experience)
-				TemplateValue("group", group)
-			}
+		ingredient.value.Content()
+		Row {
+			TemplateValue("result", result)
+			TemplateValue("cooking time", cookingTime)
+			TemplateValue("experience", experience)
+			TemplateValue("group", group)
 		}
+		
 	}
 }
 
@@ -167,15 +165,13 @@ sealed class CookingRecipeMulti : RecipeTemplate() {
 	
 	@Composable
 	override fun Content() {
-		Column {
-			TemplateValueList(ingredient)
-			
-			Row {
-				TemplateValue("result", result)
-				TemplateValue("cooking time", cookingTime)
-				TemplateValue("experience", experience)
-				TemplateValue("group", group)
-			}
+		TemplateValueList(ingredient)
+		
+		Row {
+			TemplateValue("result", result)
+			TemplateValue("cooking time", cookingTime)
+			TemplateValue("experience", experience)
+			TemplateValue("group", group)
 		}
 	}
 }
@@ -232,11 +228,10 @@ class CraftingShapedRecipeTemplate : CraftRecipe() {
 	
 	@Composable
 	override fun Content() {
-		Column {
-			TemplateValueList("pattern", pattern, limit = 3)
-			TemplateValueList(key, 9)
-			result.value.Content()
-		}
+		TemplateValueList("pattern", pattern, limit = 3)
+		TemplateValueList(key, 9)
+		result.value.Content()
+		
 	}
 }
 
@@ -251,10 +246,8 @@ class CraftingShapelessRecipeTemplate : CraftRecipe() {
 	
 	@Composable
 	override fun Content() {
-		Column {
-			TemplateValueList(ingredients, 9)
-			result.value.Content()
-		}
+		TemplateValueList(ingredients, 9)
+		result.value.Content()
 	}
 }
 
@@ -325,12 +318,10 @@ class SmithingRecipeTemplate : RecipeTemplate() {
 	
 	@Composable
 	override fun Content() {
-		Column {
-			addition.value.Content()
-			base.value.Content()
-			
-			TemplateValue("result", result)
-		}
+		addition.value.Content()
+		base.value.Content()
+		
+		TemplateValue("result", result)
 	}
 }
 
@@ -367,11 +358,10 @@ class StoneCuttingRecipeSingleTemplate : RecipeTemplate() {
 	
 	@Composable
 	override fun Content() {
-		Column {
-			TemplateValue("count", count)
-			ingredient.value.Content()
-			TemplateValue("result", result)
-		}
+		TemplateValue("count", count)
+		ingredient.value.Content()
+		TemplateValue("result", result)
+		
 	}
 }
 
@@ -392,10 +382,8 @@ class StoneCuttingRecipeMultiTemplate : RecipeTemplate() {
 	
 	@Composable
 	override fun Content() {
-		Column {
-			TemplateValue("count", count)
-			TemplateValueList(ingredient)
-			TemplateValue("result", result)
-		}
+		TemplateValue("count", count)
+		TemplateValueList(ingredient)
+		TemplateValue("result", result)
 	}
 }

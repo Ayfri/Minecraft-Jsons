@@ -48,12 +48,15 @@ inline fun <reified T : Comparable<T>> convertValue(value: String): T {
 @Composable
 inline fun <reified T : Template> Template(
 	template: T,
+	modifier: Modifier = Modifier,
 ) {
 	Row(
 		verticalAlignment = Alignment.CenterVertically,
 		horizontalArrangement = Arrangement.SpaceBetween,
 	) {
-		template.Content()
+		Column(modifier = Modifier.then(modifier)) {
+			template.Content()
+		}
 	}
 }
 
