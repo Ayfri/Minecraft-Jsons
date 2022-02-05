@@ -80,33 +80,44 @@ inline fun <reified T : Comparable<T>> Template(
 	name: String,
 	value: T,
 	modifier: Modifier = Modifier,
-	isError: Boolean = false,
 	required: Boolean = false,
-	errorMessage: String? = null,
+	errorMessage: MutableState<ErrorType?> = mutableStateOf(null),
 	noinline onValueChange: (String) -> Unit = {}
 ) {
-	val isErrorEmpty = required && value.toString().isEmpty()
-	
+	if (required && value.toString().isEmpty()) errorMessage.value = ErrorType.REQUIRED_FIELD
+	val isError = mutableStateOf(errorMessage.value != null)
+	val errorCreate = ErrorCreate(errorMessage.value, name, value)
+	if (isError.value) canCreate += errorCreate
 	OutlinedTextField(
 		modifier = Modifier.requiredWidthIn(200.dp, 200.dp).then(modifier),
 		singleLine = true,
 		value = value.toString(),
 		label = {
-			if (required || isError) Text(
-				text = AnnotatedString("$name*", SpanStyle(color = if (isErrorEmpty) MaterialTheme.colors.error else MaterialTheme.colors.onBackground)),
+			if (required || isError.value) Text(
+				text = AnnotatedString("$name*", SpanStyle(color = if (isError.value) MaterialTheme.colors.error else MaterialTheme.colors.onBackground)),
 				style = MaterialTheme.typography.caption,
 				modifier = Modifier.padding(start = 8.dp, end = 8.dp),
 			) else Text(name)
 		},
-		onValueChange = onValueChange,
+		onValueChange = {
+			onValueChange(it)
+			if (required && it.isEmpty()) errorMessage.value = ErrorType.REQUIRED_FIELD
+			isError.value = errorMessage.value != null
+			if (isError.value && errorCreate !in canCreate) {
+				canCreate += errorCreate
+			} else {
+				if (ErrorType.DUPLICATE_ENTRY == errorMessage.value) canCreate.removeIf { it.value == errorCreate.value }
+				canCreate.removeIf { it.name == name }
+			}
+		},
 		trailingIcon = {
-			if (isError || isErrorEmpty) TooltipArea(
+			if (isError.value) TooltipArea(
 				modifier = Modifier.padding(start = 8.dp, end = 8.dp),
 				tooltip = {
 					Box(
 						modifier = Modifier.shadow(7.dp, clip = false).background(color = MaterialTheme.colors.background, shape = RoundedCornerShape(10)).padding(5.dp),
 					) {
-						Text(if (isErrorEmpty) "Required field." else errorMessage ?: "", style = MaterialTheme.typography.subtitle1)
+						Text(errorMessage.value?.message ?: "", style = MaterialTheme.typography.subtitle1)
 					}
 				})
 			{
@@ -117,7 +128,7 @@ inline fun <reified T : Comparable<T>> Template(
 				)
 			}
 		},
-		isError = isError,
+		isError = isError.value,
 	)
 }
 
@@ -126,11 +137,11 @@ inline fun <reified T : Comparable<T>> TemplateValue(
 	name: String,
 	value: MutableState<T>,
 	modifier: Modifier = Modifier,
-	isError: Boolean = false,
 	required: Boolean = false,
-	errorMessage: String? = null,
+	errorMessage: ErrorType? = null,
 ) {
-	Template(name, value.value, modifier, isError, required, errorMessage) {
+	val error = mutableStateOf(errorMessage)
+	Template(name, value.value, modifier, required, error) {
 		value.value = convertValue(it)
 	}
 }
@@ -202,14 +213,14 @@ inline fun <reified T> TemplateValueList(value: SnapshotStateList<T>, limit: Int
 			verticalArrangement = Arrangement.SpaceBetween,
 		) {
 			value.forEachIndexed { index, v ->
-				val errorMessage = mutableStateOf<String?>(null)
+				val errorMessage = mutableStateOf<ErrorType?>(null)
 				
 				Row(
 					verticalAlignment = Alignment.CenterVertically,
 				) {
 					ButtonDelete(value, index)
-					if (value.count { it.key.value == v.key.value } > 1 && unique) errorMessage.value = "Keys must be unique"
-					TemplateValue("key", v.key, required = true, errorMessage = errorMessage.value, isError = errorMessage.value != null)
+					if (value.count { it.key.value == v.key.value } > 1 && unique) errorMessage.value = ErrorType.DUPLICATE_ENTRY
+					TemplateValue("key $index", v.key, required = true, errorMessage = errorMessage.value)
 					Spacer(Modifier.width(20.dp))
 					v.Content()
 				}

@@ -6,6 +6,7 @@ import androidx.compose.material.Button
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.serialization.encodeToString
@@ -18,6 +19,15 @@ import templates.Template
 import templates.TemplateType
 import java.io.File
 
+enum class ErrorType(val message: String) {
+	REQUIRED_FIELD("Required field."),
+	DUPLICATE_ENTRY("Keys must be unique."),
+}
+
+data class ErrorCreate<T>(val error: ErrorType?, val name: String, val value: T)
+
+val canCreate = mutableStateListOf<ErrorCreate<*>>()
+
 @Composable
 fun ButtonCreate(
 	folder: MutableState<String>,
@@ -27,6 +37,7 @@ fun ButtonCreate(
 ) {
 	Button(
 		modifier = Modifier.paddingFromBaseline(bottom = 10.dp),
+		enabled = canCreate.isEmpty(),
 		onClick = {
 			val file = File(folder.value, "${fileName.value}.json")
 			
