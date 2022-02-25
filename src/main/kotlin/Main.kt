@@ -1,3 +1,4 @@
+
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.layout.Box
@@ -11,6 +12,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -28,8 +30,11 @@ import composables.ButtonCreate
 import composables.DropDown
 import composables.FilenameSelector
 import composables.FolderSelector
+import composables.Template
 import kotlinx.serialization.InternalSerializationApi
 import templates.CraftingShapedRecipeTemplate
+import templates.FabricType
+import templates.ITemplateType
 import templates.RecipeType
 import templates.Template
 import templates.TemplateType
@@ -63,21 +68,34 @@ fun App() {
 		) {
 			DropDown(type, "Type") { it.name }
 			
-			if (type.value == TemplateType.RECIPE) {
-				Column(
-					modifier = Modifier.fillMaxWidth().fillMaxHeight(0.8f).padding(top = 100.dp),
-					horizontalAlignment = Alignment.CenterHorizontally
-				) {
-					val recipeType = remember { mutableStateOf(RecipeType.CRAFTING_SHAPED) }
+			Column(
+				modifier = Modifier.fillMaxWidth().fillMaxHeight(0.8f).padding(top = 100.dp),
+				horizontalAlignment = Alignment.CenterHorizontally
+			) {
+				
+				val templateType = mutableStateOf<ITemplateType<*>>(RecipeType.CRAFTING_SHAPED)
+				
+				FilenameSelector(fileName)
+				
+				when (type.value) {
+					TemplateType.RECIPE -> {
+						templateType.value = RecipeType.CRAFTING_SHAPED
+						DropDown(templateType as MutableState<RecipeType>, "Recipe Type") {
+							templateName.value = it
+							templateValue.value = (it as ITemplateType<*>).toTemplate()
+						}
+					}
 					
-					FilenameSelector(fileName)
-					
-					DropDown(recipeType, "Recipe Type") {
-						templateName.value = it
-						templateValue.value = it.toTemplate()
+					TemplateType.FABRIC -> {
+						templateType.value = FabricType.MOD_JSON
+						DropDown(templateType as MutableState<FabricType>, "Fabric Type") {
+							templateName.value = it
+							templateValue.value = (it as ITemplateType<*>).toTemplate()
+						}
 					}
 				}
 			}
+			
 			
 			ButtonCreate(folder, fileName, templateValue, type)
 		}
@@ -89,7 +107,7 @@ fun App() {
 			
 			Box(modifier = Modifier.fillMaxSize().padding(15.dp)) {
 				val stateVertical = rememberScrollState(0)
-				composables.Template(templateValue.value, Modifier.verticalScroll(stateVertical))
+				Template(templateValue.value, Modifier.verticalScroll(stateVertical))
 				VerticalScrollbar(modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(), adapter = rememberScrollbarAdapter(stateVertical))
 			}
 		}

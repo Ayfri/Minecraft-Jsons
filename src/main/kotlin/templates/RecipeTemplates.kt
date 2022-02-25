@@ -19,7 +19,7 @@ import kotlinx.serialization.encoding.encodeStructure
 import kotlinx.serialization.serializer
 
 @Serializable
-enum class RecipeType {
+enum class RecipeType : ITemplateType<VanillaTemplate> {
 	BLASTING,
 	BLASTING_MULTI,
 	CAMPFIRE_COOKING,
@@ -35,23 +35,21 @@ enum class RecipeType {
 	STONECUTTING,
 	STONECUTTING_MULTI;
 	
-	fun toTemplate(): VanillaTemplate {
-		return when (this) {
-			BLASTING -> BlastingRecipeSingleTemplate()
-			BLASTING_MULTI -> BlastingRecipeMultiTemplate()
-			CAMPFIRE_COOKING -> CampFireRecipeSingleTemplate()
-			CAMPFIRE_COOKING_MULTI -> CampFireRecipeMultiTemplate()
-			CRAFTING_SHAPED -> CraftingShapedRecipeTemplate()
-			CRAFTING_SHAPELESS -> CraftingShapelessRecipeTemplate()
-			CRAFTING_SPECIAL -> CraftingSpecialRecipeTemplate()
-			SMELTING -> SmeltingRecipeSingleTemplate()
-			SMELTING_MULTI -> SmeltingRecipeMultiTemplate()
-			SMITHING -> SmithingRecipeTemplate()
-			SMOKING -> SmokingRecipeSingleTemplate()
-			SMOKING_MULTI -> SmokingRecipeMultiTemplate()
-			STONECUTTING -> StoneCuttingRecipeSingleTemplate()
-			STONECUTTING_MULTI -> StoneCuttingRecipeMultiTemplate()
-		}
+	override fun toTemplate(): RecipeTemplate = when (this) {
+		BLASTING -> BlastingRecipeSingleTemplate()
+		BLASTING_MULTI -> BlastingRecipeMultiTemplate()
+		CAMPFIRE_COOKING -> CampFireRecipeSingleTemplate()
+		CAMPFIRE_COOKING_MULTI -> CampFireRecipeMultiTemplate()
+		CRAFTING_SHAPED -> CraftingShapedRecipeTemplate()
+		CRAFTING_SHAPELESS -> CraftingShapelessRecipeTemplate()
+		CRAFTING_SPECIAL -> CraftingSpecialRecipeTemplate()
+		SMELTING -> SmeltingRecipeSingleTemplate()
+		SMELTING_MULTI -> SmeltingRecipeMultiTemplate()
+		SMITHING -> SmithingRecipeTemplate()
+		SMOKING -> SmokingRecipeSingleTemplate()
+		SMOKING_MULTI -> SmokingRecipeMultiTemplate()
+		STONECUTTING -> StoneCuttingRecipeSingleTemplate()
+		STONECUTTING_MULTI -> StoneCuttingRecipeMultiTemplate()
 	}
 }
 
@@ -346,7 +344,6 @@ class StoneCuttingRecipeSingleTemplate : RecipeTemplate() {
 		TemplateValue("count", count)
 		ingredient.value.Content()
 		TemplateValue("result", result)
-		
 	}
 }
 

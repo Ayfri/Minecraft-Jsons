@@ -82,6 +82,7 @@ inline fun <reified T : Comparable<T>> Template(
 	modifier: Modifier = Modifier,
 	required: Boolean = false,
 	errorMessage: MutableState<ErrorType?> = mutableStateOf(null),
+	constant: Boolean = false,
 	noinline onValueChange: (String) -> Unit = {}
 ) {
 	if (required && value.toString().isEmpty()) errorMessage.value = ErrorType.REQUIRED_FIELD
@@ -92,6 +93,7 @@ inline fun <reified T : Comparable<T>> Template(
 		modifier = Modifier.requiredWidthIn(200.dp, 200.dp).then(modifier),
 		singleLine = true,
 		value = value.toString(),
+		enabled = !constant,
 		label = {
 			if (required || isError.value) Text(
 				text = AnnotatedString("$name*", SpanStyle(color = if (isError.value) MaterialTheme.colors.error else MaterialTheme.colors.onBackground)),
@@ -139,15 +141,16 @@ inline fun <reified T : Comparable<T>> TemplateValue(
 	modifier: Modifier = Modifier,
 	required: Boolean = false,
 	errorMessage: ErrorType? = null,
+	constant: Boolean = false,
 ) {
 	val error = mutableStateOf(errorMessage)
-	Template(name, value.value, modifier, required, error) {
+	Template(name, value.value, modifier, required, error, constant) {
 		value.value = convertValue(it)
 	}
 }
 
 @Composable
-inline fun <reified T : Enum<T>> TemplateValueEnum(name: String, value: MutableState<T>, modifier: Modifier = Modifier, noinline transformer: (T) -> String) {
+inline fun <reified T : Enum<T>> TemplateValueEnum(name: String, value: MutableState<T>, modifier: Modifier = Modifier, noinline transformer: (T) -> String = { it.name }) {
 	DropDown(value, name, modifier, transformer)
 }
 

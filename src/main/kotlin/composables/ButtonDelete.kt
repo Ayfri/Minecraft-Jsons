@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -21,6 +22,20 @@ fun <T> ButtonDelete(list: SnapshotStateList<T>, index: Int) {
 	TextButton(
 		onClick = {
 			list.removeAt(index)
+		},
+		colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.LightGray),
+		modifier = Modifier.size(32.dp).padding(end = 5.dp),
+		contentPadding = PaddingValues(0.dp)
+	) {
+		Icon(Icons.Outlined.Delete, "delete")
+	}
+}
+
+@Composable
+fun <K, V> ButtonDelete(map: SnapshotStateMap<K, V>, item: K) {
+	TextButton(
+		onClick = {
+			map.remove(item)
 		},
 		colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.LightGray),
 		modifier = Modifier.size(32.dp).padding(end = 5.dp),

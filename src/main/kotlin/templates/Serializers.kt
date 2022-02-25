@@ -9,6 +9,7 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.Serializer
 import kotlinx.serialization.Transient
 import kotlinx.serialization.builtins.ListSerializer
@@ -68,4 +69,16 @@ class MutableStateSerializerLowerCase<T>(private val dataSerializer: KSerializer
 	override fun deserialize(decoder: Decoder) = mutableStateOf(decoder.decodeSerializableValue(dataSerializer))
 	override val descriptor: SerialDescriptor = dataSerializer.descriptor
 	override fun serialize(encoder: Encoder, value: MutableState<T>) = encoder.encodeString(value.value.toString().lowercase())
+}
+
+@Serializable(with = EnumLabeledSerializer::class)
+interface LabelEnum {
+	@Transient
+	val label: String
+}
+
+class EnumLabeledSerializer<T>(private val dataSerializer: KSerializer<T>) : KSerializer<T> where T : LabelEnum {
+	override fun deserialize(decoder: Decoder) = decoder.decodeSerializableValue(dataSerializer)
+	override val descriptor: SerialDescriptor = dataSerializer.descriptor
+	override fun serialize(encoder: Encoder, value: T) = encoder.encodeString(value.label)
 }
