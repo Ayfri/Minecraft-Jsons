@@ -54,12 +54,7 @@ fun ButtonCreate(
 			
 			val json = serializer.encodeToJsonElement(templateValue.value castWith type.value)
 			val jsonFixed = json.jsonObject.filterNot {
-				it.key == CLASS_TYPE_TO_REMOVE
-						|| try {
-					it.value.jsonPrimitive.contentOrNull?.isEmpty() == true
-				} catch (_: Exception) {
-					false
-				}
+				it.key == CLASS_TYPE_TO_REMOVE || runCatching { it.value.jsonPrimitive.contentOrNull?.isEmpty() == true }.isSuccess
 			}
 			
 			writer.write(serializer.encodeToString(jsonFixed))

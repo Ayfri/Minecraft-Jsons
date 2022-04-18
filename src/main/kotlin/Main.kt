@@ -1,4 +1,3 @@
-
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.layout.Box
@@ -66,36 +65,19 @@ fun App() {
 			}.weight(0.3f).padding(end = 10.dp),
 			horizontalAlignment = Alignment.CenterHorizontally
 		) {
-			DropDown(type, "Type") { it.name }
+			DropDown(type, "Type", onChange = {
+				type.value = it
+				updateTemplateValue(type, templateValue)
+			})
 			
 			Column(
 				modifier = Modifier.fillMaxWidth().fillMaxHeight(0.8f).padding(top = 100.dp),
 				horizontalAlignment = Alignment.CenterHorizontally
 			) {
-				
-				val templateType = mutableStateOf<ITemplateType<*>>(RecipeType.CRAFTING_SHAPED)
-				
 				FilenameSelector(fileName)
 				
-				when (type.value) {
-					TemplateType.RECIPE -> {
-						templateType.value = RecipeType.CRAFTING_SHAPED
-						DropDown(templateType as MutableState<RecipeType>, "Recipe Type") {
-							templateName.value = it
-							templateValue.value = (it as ITemplateType<*>).toTemplate()
-						}
-					}
-					
-					TemplateType.FABRIC -> {
-						templateType.value = FabricType.MOD_JSON
-						DropDown(templateType as MutableState<FabricType>, "Fabric Type") {
-							templateName.value = it
-							templateValue.value = (it as ITemplateType<*>).toTemplate()
-						}
-					}
-				}
+				TemplateDropDownFromType(type, templateName, templateValue)
 			}
-			
 			
 			ButtonCreate(folder, fileName, templateValue, type)
 		}
@@ -110,6 +92,41 @@ fun App() {
 				Template(templateValue.value, Modifier.verticalScroll(stateVertical))
 				VerticalScrollbar(modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(), adapter = rememberScrollbarAdapter(stateVertical))
 			}
+		}
+	}
+}
+
+@Composable
+fun TemplateDropDownFromType(
+	type: MutableState<TemplateType>,
+	selection: MutableState<Any?>,
+	templateValue: MutableState<Template>
+) {
+	when (type.value) {
+		TemplateType.RECIPE -> {
+			DropDown<RecipeType>("Recipe Type") {
+				selection.value = it
+				templateValue.value = (it as ITemplateType<*>).toTemplate()
+			}
+		}
+		
+		TemplateType.FABRIC -> {
+			DropDown<FabricType>("Fabric Type") {
+				selection.value = it
+				templateValue.value = (it as ITemplateType<*>).toTemplate()
+			}
+		}
+	}
+}
+
+fun updateTemplateValue(type: MutableState<TemplateType>, templateValue: MutableState<Template>) {
+	when (type.value) {
+		TemplateType.RECIPE -> {
+			templateValue.value = RecipeType.CRAFTING_SHAPED.toTemplate()
+		}
+		
+		TemplateType.FABRIC -> {
+			templateValue.value = FabricType.MOD_JSON.toTemplate()
 		}
 	}
 }

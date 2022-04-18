@@ -49,7 +49,7 @@ class EntrySets : FabricTemplate() {
 
 @Serializable
 class JARDependant : FabricTemplate() {
-	@Serializable
+	@Serializable(with = MutableStateSerializer::class)
 	val file = mutableStateOf("")
 	
 	@Composable
