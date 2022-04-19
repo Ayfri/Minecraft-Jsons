@@ -21,6 +21,13 @@ sealed interface ITemplateType<T : Template> {
 enum class TemplateType {
 	RECIPE,
 	FABRIC;
+	
+	inline fun <reified E : Enum<*>> toTemplateValues()  = when (this) {
+		RECIPE -> RecipeType.values() as Array<E>
+		FABRIC -> FabricType.values() as Array<E>
+	}
+	
+	fun toTemplateSubType() = (toTemplateValues() as Array<ITemplateType<*>>).first().toTemplate()
 }
 
 @Serializable

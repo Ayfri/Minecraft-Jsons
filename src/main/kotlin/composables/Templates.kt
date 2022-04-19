@@ -30,8 +30,8 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.unit.dp
+import serializers.TemplateMapSerializable
 import templates.Template
-import templates.TemplateMapSerializable
 
 inline fun <reified T : Comparable<T>> convertValue(value: String): T {
 	return when (T::class) {
@@ -156,80 +156,94 @@ inline fun <reified T : Enum<T>> TemplateValueEnum(name: String, value: MutableS
 
 @Composable
 inline fun <reified T : Comparable<T>> TemplateValueList(name: String, value: SnapshotStateList<T>, modifier: Modifier = Modifier, limit: Int = Int.MAX_VALUE) {
-	Row(
-		modifier = Modifier.fillMaxWidth()
-	) {
-		Column(
-			horizontalAlignment = Alignment.CenterHorizontally,
-			verticalArrangement = Arrangement.SpaceBetween,
+	Column {
+		Text(name)
+		
+		Row(
+			modifier = Modifier.fillMaxWidth()
 		) {
-			value.forEachIndexed { i, item ->
-				Row(
-					verticalAlignment = Alignment.CenterVertically,
-				) {
-					ButtonDelete(value, i)
-					Template(
-						name = "$name #$i",
-						value = item.toString(),
-						modifier = Modifier.then(modifier),
+			Column(
+				horizontalAlignment = Alignment.CenterHorizontally,
+				verticalArrangement = Arrangement.SpaceBetween,
+			) {
+				value.forEachIndexed { i, item ->
+					Row(
+						verticalAlignment = Alignment.CenterVertically,
 					) {
-						value[i] = convertValue(it)
+						ButtonDelete(value, i)
+						Template(
+							name = "$name #$i",
+							value = item.toString(),
+							modifier = Modifier.then(modifier),
+						) {
+							value[i] = convertValue(it)
+						}
 					}
 				}
 			}
+			
+			if (value.size < limit) ButtonAdd(value)
 		}
-		
-		if (value.size < limit) ButtonAdd(value)
 	}
 }
 
 @Composable
-inline fun <reified T : Template> TemplateValueList(value: SnapshotStateList<T>, limit: Int = Int.MAX_VALUE) {
-	Row(
-		modifier = Modifier.fillMaxWidth()
-	) {
-		Column(
-			horizontalAlignment = Alignment.CenterHorizontally,
-			verticalArrangement = Arrangement.SpaceBetween,
+inline fun <reified T : Template> TemplateValueList(
+	name: String = "",
+	value: SnapshotStateList<T>,
+	limit: Int = Int.MAX_VALUE
+) {
+	Column {
+		Text(name)
+		Row(
+			modifier = Modifier.fillMaxWidth()
 		) {
-			value.forEachIndexed { index, it ->
-				Row(
-					verticalAlignment = Alignment.CenterVertically,
-				) {
-					ButtonDelete(value, index)
-					it.Content()
+			Column(
+				horizontalAlignment = Alignment.CenterHorizontally,
+				verticalArrangement = Arrangement.SpaceBetween,
+			) {
+				value.forEachIndexed { index, it ->
+					Row(
+						verticalAlignment = Alignment.CenterVertically,
+					) {
+						ButtonDelete(value, index)
+						it.Content()
+					}
 				}
 			}
+			
+			if (value.size < limit) ButtonAdd(value)
 		}
-		
-		if (value.size < limit) ButtonAdd(value)
 	}
 }
 
 @Composable
-inline fun <reified T> TemplateValueList(value: SnapshotStateList<T>, limit: Int = Int.MAX_VALUE, unique: Boolean = false) where T : Template, T : TemplateMapSerializable {
-	Row(
-		modifier = Modifier.fillMaxWidth()
-	) {
-		Column(
-			horizontalAlignment = Alignment.CenterHorizontally,
-			verticalArrangement = Arrangement.SpaceBetween,
+inline fun <reified T> TemplateValueList(name: String = "", value: SnapshotStateList<T>, limit: Int = Int.MAX_VALUE, unique: Boolean = false) where T : Template, T : TemplateMapSerializable {
+	Column {
+		Text(name)
+		Row(
+			modifier = Modifier.fillMaxWidth()
 		) {
-			value.forEachIndexed { index, v ->
-				val errorMessage = mutableStateOf<ErrorType?>(null)
-				
-				Row(
-					verticalAlignment = Alignment.CenterVertically,
-				) {
-					ButtonDelete(value, index)
-					if (value.count { it.key.value == v.key.value } > 1 && unique) errorMessage.value = ErrorType.DUPLICATE_ENTRY
-					TemplateValue("key $index", v.key, required = true, errorMessage = errorMessage.value)
-					Spacer(Modifier.width(20.dp))
-					v.Content()
+			Column(
+				horizontalAlignment = Alignment.CenterHorizontally,
+				verticalArrangement = Arrangement.SpaceBetween,
+			) {
+				value.forEachIndexed { index, v ->
+					val errorMessage = mutableStateOf<ErrorType?>(null)
+					
+					Row(
+						verticalAlignment = Alignment.CenterVertically,
+					) {
+						ButtonDelete(value, index)
+						if (value.count { it.key.value == v.key.value } > 1 && unique) errorMessage.value = ErrorType.DUPLICATE_ENTRY
+						TemplateValue("key $index", v.key, required = true, errorMessage = errorMessage.value)
+						Spacer(Modifier.width(20.dp))
+						v.Content()
+					}
 				}
 			}
+			
+			if (value.size < limit) ButtonAdd(value)
 		}
-		
-		if (value.size < limit) ButtonAdd(value)
 	}
 }

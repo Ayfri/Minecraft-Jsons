@@ -6,6 +6,8 @@ import androidx.compose.runtime.mutableStateOf
 import composables.TemplateValue
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
+import serializers.MutableStateSerializer
+import serializers.TemplateMapSerializable
 
 @Serializable
 open class ItemTemplate : VanillaTemplate() {

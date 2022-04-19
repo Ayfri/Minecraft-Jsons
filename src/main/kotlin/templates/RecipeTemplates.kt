@@ -7,18 +7,16 @@ import androidx.compose.runtime.mutableStateOf
 import composables.TemplateValue
 import composables.TemplateValueEnum
 import composables.TemplateValueList
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
-import kotlinx.serialization.descriptors.buildClassSerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.encoding.decodeStructure
-import kotlinx.serialization.encoding.encodeStructure
-import kotlinx.serialization.serializer
+import serializers.CraftingSpecialRecipeSerializer
+import serializers.MutableStateSerializer
+import serializers.MutableStateSerializerLowerCase
+import serializers.SnapshotListMapSerializer
+import serializers.SnapshotListSerializer
+import serializers.TemplateMapSerializable
 
-@Serializable
 enum class RecipeType : ITemplateType<VanillaTemplate> {
 	BLASTING,
 	BLASTING_MULTI,
@@ -35,7 +33,7 @@ enum class RecipeType : ITemplateType<VanillaTemplate> {
 	STONECUTTING,
 	STONECUTTING_MULTI;
 	
-	override fun toTemplate(): RecipeTemplate = when (this) {
+	override fun toTemplate() = when (this) {
 		BLASTING -> BlastingRecipeSingleTemplate()
 		BLASTING_MULTI -> BlastingRecipeMultiTemplate()
 		CAMPFIRE_COOKING -> CampFireRecipeSingleTemplate()
@@ -52,6 +50,26 @@ enum class RecipeType : ITemplateType<VanillaTemplate> {
 		STONECUTTING_MULTI -> StoneCuttingRecipeMultiTemplate()
 	}
 }
+
+
+@Serializable
+enum class RecipeTypeSerializable {
+	BLASTING,
+	BLASTING_MULTI,
+	CAMPFIRE_COOKING,
+	CAMPFIRE_COOKING_MULTI,
+	CRAFTING_SHAPED,
+	CRAFTING_SHAPELESS,
+	CRAFTING_SPECIAL,
+	SMELTING,
+	SMELTING_MULTI,
+	SMITHING,
+	SMOKING,
+	SMOKING_MULTI,
+	STONECUTTING,
+	STONECUTTING_MULTI;
+}
+
 
 @Serializable
 enum class SpecialRecipes {
@@ -73,7 +91,8 @@ enum class SpecialRecipes {
 @Serializable
 sealed class RecipeTemplate : VanillaTemplate() {
 	@Serializable(with = MutableStateSerializerLowerCase::class)
-	var type = mutableStateOf(RecipeType.CRAFTING_SHAPELESS)
+	@Transient
+	var type = mutableStateOf(RecipeTypeSerializable.CRAFTING_SHAPELESS)
 }
 
 @Serializable
@@ -94,7 +113,7 @@ open class CraftResultTemplate : VanillaTemplate() {
 }
 
 @Serializable
-class CraftResultTemplateMap : CraftResultTemplate(), TemplateMapSerializable {
+sealed class CraftResultTemplateMap : CraftResultTemplate(), TemplateMapSerializable {
 	@Transient
 	override val key = mutableStateOf("")
 }
@@ -126,7 +145,6 @@ sealed class CookingRecipeSingle : RecipeTemplate() {
 			TemplateValue("experience", experience)
 			TemplateValue("group", group)
 		}
-		
 	}
 }
 
@@ -149,7 +167,7 @@ sealed class CookingRecipeMulti : RecipeTemplate() {
 	
 	@Composable
 	override fun Content() {
-		TemplateValueList(ingredient)
+		TemplateValueList("ingredients", ingredient)
 		
 		Row {
 			TemplateValue("result", result)
@@ -170,7 +188,7 @@ sealed class CraftRecipe : RecipeTemplate() {
 class BlastingRecipeSingleTemplate : CookingRecipeSingle() {
 	init {
 		cookingTime.value = 100
-		type.value = RecipeType.BLASTING
+		type.value = RecipeTypeSerializable.BLASTING
 	}
 }
 
@@ -178,7 +196,7 @@ class BlastingRecipeSingleTemplate : CookingRecipeSingle() {
 class BlastingRecipeMultiTemplate : CookingRecipeMulti() {
 	init {
 		cookingTime.value = 100
-		type.value = RecipeType.BLASTING
+		type.value = RecipeTypeSerializable.BLASTING
 	}
 }
 
@@ -186,7 +204,7 @@ class BlastingRecipeMultiTemplate : CookingRecipeMulti() {
 class CampFireRecipeSingleTemplate : CookingRecipeSingle() {
 	init {
 		cookingTime.value = 100
-		type.value = RecipeType.CAMPFIRE_COOKING
+		type.value = RecipeTypeSerializable.CAMPFIRE_COOKING
 	}
 }
 
@@ -194,7 +212,7 @@ class CampFireRecipeSingleTemplate : CookingRecipeSingle() {
 class CampFireRecipeMultiTemplate : CookingRecipeMulti() {
 	init {
 		cookingTime.value = 100
-		type.value = RecipeType.CAMPFIRE_COOKING_MULTI
+		type.value = RecipeTypeSerializable.CAMPFIRE_COOKING_MULTI
 	}
 }
 
@@ -207,13 +225,13 @@ class CraftingShapedRecipeTemplate : CraftRecipe() {
 	val key = mutableStateListOf<ItemTemplateMap>()
 	
 	init {
-		type.value = RecipeType.CRAFTING_SHAPED
+		type.value = RecipeTypeSerializable.CRAFTING_SHAPED
 	}
 	
 	@Composable
 	override fun Content() {
 		TemplateValueList("pattern", pattern, limit = 3)
-		TemplateValueList(key, 9, true)
+		TemplateValueList("keys", key, 9, true)
 		result.value.Content()
 	}
 }
@@ -224,12 +242,12 @@ class CraftingShapelessRecipeTemplate : CraftRecipe() {
 	val ingredients = mutableStateListOf<CraftResultTemplateMap>()
 	
 	init {
-		type.value = RecipeType.CRAFTING_SHAPELESS
+		type.value = RecipeTypeSerializable.CRAFTING_SHAPELESS
 	}
 	
 	@Composable
 	override fun Content() {
-		TemplateValueList(ingredients, 9, true)
+		TemplateValueList("ingredients", ingredients, 9, true)
 		result.value.Content()
 	}
 }
@@ -245,34 +263,11 @@ class CraftingSpecialRecipeTemplate : RecipeTemplate() {
 	}
 }
 
-object CraftingSpecialRecipeSerializer : KSerializer<CraftingSpecialRecipeTemplate> {
-	override fun deserialize(decoder: Decoder): CraftingSpecialRecipeTemplate {
-		return decoder.decodeStructure(descriptor) {
-			val type = decodeStringElement(descriptor, 0)
-			
-			CraftingSpecialRecipeTemplate().apply {
-				specialType.value = SpecialRecipes.valueOf(type)
-			}
-		}
-	}
-	
-	override val descriptor = buildClassSerialDescriptor("CraftingSpecialRecipeTemplate") {
-		element("type", MutableStateSerializerLowerCase(serializer<String>()).descriptor)
-	}
-	
-	
-	override fun serialize(encoder: Encoder, value: CraftingSpecialRecipeTemplate) {
-		encoder.encodeStructure(descriptor) {
-			encodeStringElement(descriptor, 0, value.specialType.value.name.lowercase())
-		}
-	}
-}
-
 @Serializable
 class SmeltingRecipeSingleTemplate : CookingRecipeSingle() {
 	init {
 		cookingTime.value = 200
-		type.value = RecipeType.SMELTING
+		type.value = RecipeTypeSerializable.SMELTING
 	}
 }
 
@@ -280,7 +275,7 @@ class SmeltingRecipeSingleTemplate : CookingRecipeSingle() {
 class SmeltingRecipeMultiTemplate : CookingRecipeMulti() {
 	init {
 		cookingTime.value = 200
-		type.value = RecipeType.SMELTING_MULTI
+		type.value = RecipeTypeSerializable.SMELTING_MULTI
 	}
 }
 
@@ -296,7 +291,7 @@ class SmithingRecipeTemplate : RecipeTemplate() {
 	val result = mutableStateOf("")
 	
 	init {
-		type.value = RecipeType.SMITHING
+		type.value = RecipeTypeSerializable.SMITHING
 	}
 	
 	@Composable
@@ -312,7 +307,7 @@ class SmithingRecipeTemplate : RecipeTemplate() {
 class SmokingRecipeSingleTemplate : CookingRecipeSingle() {
 	init {
 		cookingTime.value = 100
-		type.value = RecipeType.SMOKING
+		type.value = RecipeTypeSerializable.SMOKING
 	}
 }
 
@@ -320,7 +315,7 @@ class SmokingRecipeSingleTemplate : CookingRecipeSingle() {
 class SmokingRecipeMultiTemplate : CookingRecipeMulti() {
 	init {
 		cookingTime.value = 100
-		type.value = RecipeType.SMOKING_MULTI
+		type.value = RecipeTypeSerializable.SMOKING_MULTI
 	}
 }
 
@@ -336,7 +331,7 @@ class StoneCuttingRecipeSingleTemplate : RecipeTemplate() {
 	val result = mutableStateOf("")
 	
 	init {
-		type.value = RecipeType.STONECUTTING
+		type.value = RecipeTypeSerializable.STONECUTTING
 	}
 	
 	@Composable
@@ -359,13 +354,13 @@ class StoneCuttingRecipeMultiTemplate : RecipeTemplate() {
 	val result = mutableStateOf("")
 	
 	init {
-		type.value = RecipeType.STONECUTTING_MULTI
+		type.value = RecipeTypeSerializable.STONECUTTING_MULTI
 	}
 	
 	@Composable
 	override fun Content() {
 		TemplateValue("count", count)
-		TemplateValueList(ingredient)
+		TemplateValueList("ingredients", ingredient)
 		TemplateValue("result", result)
 	}
 }

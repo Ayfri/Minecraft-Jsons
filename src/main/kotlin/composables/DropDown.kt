@@ -26,48 +26,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 
 @Composable
-fun DropDown(
-	items: List<String>,
-	selection: MutableState<String>,
-	label: String,
-) {
-	Column {
-		var expanded by remember { mutableStateOf(false) }
-		var textFieldSize by remember { mutableStateOf(Size.Zero) }
-		
-		OutlinedTextField(
-			label = { Text(label) },
-			value = selection.value,
-			onValueChange = {},
-			readOnly = true,
-			trailingIcon = {
-				Icon(if (expanded) Icons.Filled.ArrowDropUp else Icons.Filled.ArrowDropDown, "contentDescription", Modifier.clickable { expanded = !expanded })
-			},
-			modifier = Modifier.padding(10.dp).onGloballyPositioned {
-				textFieldSize = it.size.toSize()
-			},
-		)
-		
-		DropdownMenu(
-			expanded = expanded,
-			onDismissRequest = { expanded = false },
-			modifier = Modifier.width(with(LocalDensity.current) { textFieldSize.width.toDp() }),
-		) {
-			for (t in items) {
-				DropdownMenuItem(
-					onClick = {
-						selection.value = t
-						expanded = false
-					},
-				) {
-					Text(t)
-				}
-			}
-		}
-	}
-}
-
-@Composable
 inline fun <reified T : Enum<T>> DropDown(
 	selection: MutableState<T>,
 	label: String,
@@ -136,15 +94,14 @@ inline fun <T> DropDown(
 
 @Composable
 @JvmName("DropDownEnumName")
-inline fun <reified E : Enum<E>> DropDown(
+inline fun <reified E : Enum<*>> DropDown(
+	enumValues: Array<E>,
 	label: String,
+	selection: MutableState<E>,
 	modifier: Modifier = Modifier,
 	crossinline transform: (E) -> String = { it.name },
 	crossinline onChange: (E) -> Unit = {}
 ) {
-	val enumValues = enumValues<E>().asList()
-	val enumSelection = mutableStateOf(enumValues[0])
-	
 	Column(
 		modifier,
 	) {
@@ -153,7 +110,7 @@ inline fun <reified E : Enum<E>> DropDown(
 		
 		OutlinedTextField(
 			label = { Text(label) },
-			value = transform(enumSelection.value),
+			value = transform(selection.value),
 			onValueChange = {},
 			readOnly = true,
 			trailingIcon = {
@@ -172,7 +129,7 @@ inline fun <reified E : Enum<E>> DropDown(
 			for (item in enumValues) {
 				DropdownMenuItem(
 					onClick = {
-						enumSelection.value = item
+						selection.value = item
 						onChange(item)
 						expanded = false
 					},

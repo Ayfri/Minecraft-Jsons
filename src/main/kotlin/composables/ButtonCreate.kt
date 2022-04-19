@@ -47,14 +47,14 @@ fun ButtonCreate(
 			val writer = file.writer()
 			val serializer = Json {
 				classDiscriminator = CLASS_TYPE_TO_REMOVE
-				isLenient = true
 				coerceInputValues = true
+				isLenient = true
 				prettyPrint = true
 			}
 			
 			val json = serializer.encodeToJsonElement(templateValue.value castWith type.value)
 			val jsonFixed = json.jsonObject.filterNot {
-				it.key == CLASS_TYPE_TO_REMOVE || runCatching { it.value.jsonPrimitive.contentOrNull?.isEmpty() == true }.isSuccess
+				it.key == CLASS_TYPE_TO_REMOVE || runCatching { it.value.jsonPrimitive.contentOrNull?.isEmpty() == true }.getOrNull() ?: false
 			}
 			
 			writer.write(serializer.encodeToString(jsonFixed))

@@ -1,3 +1,4 @@
+
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.layout.Box
@@ -30,13 +31,12 @@ import composables.DropDown
 import composables.FilenameSelector
 import composables.FolderSelector
 import composables.Template
-import kotlinx.serialization.InternalSerializationApi
-import templates.CraftingShapedRecipeTemplate
-import templates.FabricType
+import composables.canCreate
 import templates.ITemplateType
 import templates.RecipeType
 import templates.Template
 import templates.TemplateType
+import utils.title
 import java.nio.file.Paths
 import javax.swing.JComponent
 
@@ -44,14 +44,13 @@ lateinit var frame: JComponent
 
 const val CLASS_TYPE_TO_REMOVE = "class_type_to_remove"
 
-@OptIn(InternalSerializationApi::class)
 @Composable
 @Preview
 fun App() {
 	val fileName = remember { mutableStateOf("file") }
 	val folder = remember { mutableStateOf(Paths.get("").toAbsolutePath().normalize().toString()) }
-	val templateValue = remember { mutableStateOf<Template>(CraftingShapedRecipeTemplate()) }
-	val templateName = remember { mutableStateOf<Any?>(RecipeType.values()[0]) }
+	val templateSelection = remember { mutableStateOf<Any?>(RecipeType.values()[0]) }
+	val templateValue = remember { mutableStateOf((templateSelection.value as ITemplateType<*>).toTemplate()) }
 	val type = remember { mutableStateOf(TemplateType.RECIPE) }
 	
 	Row {
@@ -67,7 +66,8 @@ fun App() {
 		) {
 			DropDown(type, "Type", onChange = {
 				type.value = it
-				updateTemplateValue(type, templateValue)
+				templateValue.value = type.value.toTemplateSubType()
+				canCreate.clear()
 			})
 			
 			Column(
@@ -76,7 +76,7 @@ fun App() {
 			) {
 				FilenameSelector(fileName)
 				
-				TemplateDropDownFromType(type, templateName, templateValue)
+				TemplateDropDownFromType(type, templateSelection, templateValue)
 			}
 			
 			ButtonCreate(folder, fileName, templateValue, type)
@@ -102,32 +102,9 @@ fun TemplateDropDownFromType(
 	selection: MutableState<Any?>,
 	templateValue: MutableState<Template>
 ) {
-	when (type.value) {
-		TemplateType.RECIPE -> {
-			DropDown<RecipeType>("Recipe Type") {
-				selection.value = it
-				templateValue.value = (it as ITemplateType<*>).toTemplate()
-			}
-		}
-		
-		TemplateType.FABRIC -> {
-			DropDown<FabricType>("Fabric Type") {
-				selection.value = it
-				templateValue.value = (it as ITemplateType<*>).toTemplate()
-			}
-		}
-	}
-}
-
-fun updateTemplateValue(type: MutableState<TemplateType>, templateValue: MutableState<Template>) {
-	when (type.value) {
-		TemplateType.RECIPE -> {
-			templateValue.value = RecipeType.CRAFTING_SHAPED.toTemplate()
-		}
-		
-		TemplateType.FABRIC -> {
-			templateValue.value = FabricType.MOD_JSON.toTemplate()
-		}
+	DropDown(type.value.toTemplateValues(), "${type.value.name.title()} Type", selection as MutableState<Enum<*>>) {
+		templateValue.value = (it as ITemplateType<*>).toTemplate()
+		canCreate.clear()
 	}
 }
 
